@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Admin - Archive and Records</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="styles.css">
+	<link rel="stylesheet" href="pages/archive-records.css">
+</head>
+<body>
+	<div class="app">
+		<aside class="sidebar" id="sidebar">
+			<div class="sidebar__header">
+				<button class="icon-button" id="closeSidebar" aria-label="Close sidebar">☰</button>
+				<h1 class="brand">Admin</h1>
+			</div>
+			<nav class="sidebar__nav">
+				<a class="nav-item" href="index.html">Dashboard</a>
+				<a class="nav-item" href="user-management.html">User Management</a>
+				<a class="nav-item" href="document-routing.html">Document Routing</a>
+				<a class="nav-item" href="tracking-monitoring.html">Tracking and Monitoring</a>
+				<a class="nav-item" href="reports-analytics.html">Reports and Analytics</a>
+				<a class="nav-item active" href="archive-records.html">Archive and Records</a>
+				<a class="nav-item" href="security-backup.html">Security and Backup</a>
+			</nav>
+		</aside>
+		<div class="main">
+			<header class="topbar">
+				<h2 class="page">Archive and Records</h2>
+				<div class="topbar__actions">
+					<button class="icon-button" aria-label="Notifications">🔔</button>
+					<div class="avatar" title="Admin"></div>
+				</div>
+			</header>
+			<main class="content">
+				<section class="panel">
+					<div class="panel__header"><h3>Archived Documents</h3></div>
+					<div class="table-wrapper">
+						<table class="table">
+							<thead>
+								<tr>
+									<th>Archive ID</th>
+									<th>Document ID</th>
+									<th>Title</th>
+									<th>Archived Date</th>
+									<th>Archived By</th>
+									<th>Reason</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>15</td>
+									<td>1019</td>
+									<td>Contract 123</td>
+									<td>2023-08-05</td>
+									<td>Admin</td>
+									<td>Retention policy met</td>
+								</tr>
+								<tr>
+									<td>16</td>
+									<td>1002</td>
+									<td>2019 Budget</td>
+									<td>2024-01-02</td>
+									<td>Records</td>
+									<td>Superseded by new budget</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</section>
+			</main>
+		</div>
+	</div>
+	<script src="script.js"></script>
+</body>
+</html>
+

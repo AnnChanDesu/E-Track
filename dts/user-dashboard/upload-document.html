@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>User - Upload Document</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="styles.css">
+	<link rel="stylesheet" href="pages/upload-document.css">
+</head>
+<body>
+	<div class="app">
+		<aside class="sidebar" id="sidebar">
+			<div class="sidebar__header">
+				<button class="icon-button" id="closeSidebar" aria-label="Close sidebar">☰</button>
+				<h1 class="brand">User</h1>
+			</div>
+			<nav class="sidebar__nav">
+				<a class="nav-item" href="index.html">Dashboard</a>
+				<a class="nav-item active" href="upload-document.html">Upload Document</a>
+				<a class="nav-item" href="my-documents.html">My Documents</a>
+				<a class="nav-item" href="notifications.html">Notifications</a>
+				<a class="nav-item" href="profile.html">Profile</a>
+			</nav>
+		</aside>
+		<div class="main">
+			<header class="topbar">
+				<h2 class="page">Upload Document</h2>
+				<div class="topbar__actions">
+					<div class="avatar" title="User"></div>
+				</div>
+			</header>
+			<main class="content">
+				<section class="panel">
+					<div class="panel__header"><h3>New Upload</h3></div>
+					<form class="form">
+									<label>Title<input type="text" placeholder="Document title"></label>
+									<label>Author<input type="text" placeholder="Author"></label>
+									<label>Category<select><option>Finance</option><option>HR</option><option>Legal</option></select></label>
+									<label>Tags<input type="text" placeholder="Tags"></label>
+									<label>Originating Department<select><option>Finance</option><option>HR</option><option>Legal</option></select></label>
+									<label>File Path<input type="text" placeholder="File Path"></label>
+									
+					
+						<button class="button" type="button">Submit</button>
+					</form>
+				</section>
+			</main>
+		</div>
+	</div>
+	<script src="script.js"></script>
+</body>
+</html>
+

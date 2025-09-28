@@ -1,0 +1,6 @@
+/* Admin > Tracking and Monitoring */
+.grid.three { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; padding: 16px; }
+.metric { background: #0b1220; border: 1px solid #1f2937; border-radius: 8px; padding: 12px; display: grid; gap: 4px; }
+.metric__label { color: #8b93a5; font-size: 12px; }
+.metric__value { font-size: 22px; font-weight: 700; }
+
