@@ -1,0 +1,4 @@
+/* Admin > Reports and Analytics */
+.grid.two { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; padding: 16px; }
+.report-card { background: #0b1220; border: 1px solid #1f2937; border-radius: 8px; padding: 24px; text-align: center; }
+
