@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Admin Dashboard</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+	<div class="app">
+		<aside class="sidebar" id="sidebar">
+			<div class="sidebar__header">
+				<button class="icon-button" id="closeSidebar" aria-label="Close sidebar">☰</button>
+				<h1 class="brand">Admin</h1>
+			</div>
+			<nav class="sidebar__nav">
+				<a class="nav-item active" href="index.html">Dashboard</a>
+				<a class="nav-item" href="user-management.html">User Management</a>
+				<a class="nav-item" href="document-routing.html">Document Routing</a>
+				<a class="nav-item" href="tracking-monitoring.html">Tracking and Monitoring</a>
+				<a class="nav-item" href="reports-analytics.html">Reports and Analytics</a>
+				<a class="nav-item" href="archive-records.html">Archive and Records</a>
+				<a class="nav-item" href="security-backup.html">Security and Backup</a>
+			</nav>
+		</aside>
+		<div class="main">
+			<header class="topbar">
+				<h2 class="page">Dashboard</h2>
+				<div class="topbar__actions">
+					<button class="icon-button" aria-label="Notifications">🔔</button>
+					<div class="avatar" title="Admin"></div>
+				</div>
+			</header>
+			<main class="content">
+				<link rel="stylesheet" href="pages/dashboard.css">
+				<section class="cards cards--admin">
+					<div class="card"><div class="card__label">Total Documents</div><div class="card__value">1,248</div></div>
+					<div class="card"><div class="card__label">Pending Approvals</div><div class="card__value">132</div></div>
+					<div class="card"><div class="card__label">Active Users</div><div class="card__value">86</div></div>
+					<div class="card"><div class="card__label">Overdue</div><div class="card__value">14</div></div>
+				</section>
+
+				<section class="grid two-cols">
+					<div class="panel">
+						<div class="panel__header"><h3>Recent Documents</h3><button class="button">New</button></div>
+						<div class="table-wrapper">
+						<table class="table">
+							<thead>
+								<tr>
+									<th>Document ID</th>
+									<th>Title</th>
+									<th>Author</th>
+									<th>Category</th>
+									<th>Tags</th>
+									<th>Originating Department</th>
+									<th>File Path</th>
+									<th>QR Code</th>
+									<th>Status</th>
+									<th>Date Uploaded</th>
+									<th>Uploaded By</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>1021</td>
+									<td>Quarterly Report</td>
+									<td>Lyra Aurora</td>
+									<td>Reports</td>
+									<td>finance,q1</td>
+									<td>Finance</td>
+									<td>/files/reports/q1.pdf</td>
+									<td><img src="../resources/Document ID.png" alt="QR for 1021" width="48" height="48"></td>
+									<td><span class="badge badge--success">Active</span></td>
+									<td>2025-09-10</td>
+									<td>1</td>
+								</tr>
+								<tr>
+									<td>1020</td>
+									<td>Budget Plan</td>
+									<td>Rin Okada</td>
+									<td>Finance</td>
+									<td>budget,2025</td>
+									<td>Finance</td>
+									<td>/files/finance/budget.xlsx</td>
+									<td><img src="../resources/Document ID.png" alt="QR for 1020" width="48" height="48"></td>
+									<td><span class="badge badge--warning">Pending</span></td>
+									<td>2025-09-09</td>
+									<td>1</td>
+								</tr>
+								<tr>
+									<td>1019</td>
+									<td>Contract Draft</td>
+									<td>Juno Vega</td>
+									<td>Legal</td>
+									<td>contract,v1</td>
+									<td>Legal</td>
+									<td>/files/legal/contract-123.docx</td>
+									<td><img src="../resources/Document ID.png" alt="QR for 1019" width="48" height="48"></td>
+									<td><span class="badge badge--danger">Archived</span></td>
+									<td>2025-09-08</td>
+									<td>2</td>
+								</tr>
+							</tbody>
+						</table>
+						</div>
+					</div>
+					<div class="panel">
+						<div class="panel__header"><h3>Department Workload</h3></div>
+						<div class="list">
+							<div class="list__item"><span>Finance</span><span class="pill">42</span></div>
+							<div class="list__item"><span>HR</span><span class="pill">18</span></div>
+							<div class="list__item"><span>Legal</span><span class="pill">27</span></div>
+							<div class="list__item"><span>Operations</span><span class="pill">33</span></div>
+						</div>
+					</div>
+				</section>
+			</main>
+		</div>
+	</div>
+	<script src="script.js"></script>
+</body>
+</html>
+
