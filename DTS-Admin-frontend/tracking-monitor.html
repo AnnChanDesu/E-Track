@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tracking & Monitor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/style.css"/>
+  <style>
+    /* page-specific styles (keeps using your style.css) */
+    .controls {
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:14px;
+      flex-wrap:wrap;
+    }
+    .controls .left {
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .search-input {
+      padding:8px 12px;
+      border-radius:8px;
+      border:1px solid #ccc;
+      width:260px;
+    }
+    .select-range {
+      padding:8px 12px;
+      border-radius:8px;
+      border:1px solid #ccc;
+      background:#fff;
+      font-weight:500;
+    }
+    .btn {
+      padding:8px 12px;
+      border-radius:8px;
+      border:none;
+      cursor:pointer;
+      font-weight:600;
+      background:#f06a27;
+      color:#fff;
+    }
+    .btn.secondary { background:#6d4c41; }
+    .table-wrap {
+      background:#fff;
+      border-radius:10px;
+      box-shadow:0 6px 18px rgba(0,0,0,0.06);
+      padding:12px;
+      overflow:auto;
+    }
+    table.track-table {
+      width:100%;
+      border-collapse:collapse;
+      min-width:900px;
+    }
+    table.track-table th,
+    table.track-table td {
+      padding:10px 12px;
+      border-bottom:1px solid #eee;
+      text-align:left;
+      font-size:0.95rem;
+      vertical-align:middle;
+    }
+    table.track-table th { background:#f5f5f5; color:#4e342e; font-weight:600; }
+    .status-badge {
+      padding:6px 10px;
+      border-radius:20px;
+      font-weight:600;
+      font-size:0.85rem;
+      display:inline-block;
+    }
+    .status-ok { background:#e8f5e9; color:#2e7d32; }
+    .status-pending { background:#fff8e1; color:#f57c00; }
+    .status-failed { background:#ffebee; color:#c62828; }
+    .muted { color:#666; font-size:0.95rem; }
+    @media (max-width:900px) { .search-input{width:180px;} }
+    @media (max-width:640px) { .controls{flex-direction:column;align-items:stretch;} .controls .left{justify-content:space-between;} .search-input{width:100%} }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="sidebar">
+      <h1>DTS Admin</h1>
+      <ul>
+        <li><a href="admin-dashboard.html">Dashboard</a></li>
+        <li><a href="user-management.html">User Management</a></li>
+        <li><a href="document-routing.html">Document Routing</a></li>
+        <li><a href="tracking-monitor.html" class="active">Tracking & Monitor</a></li>
+        <li><a href="reports-analytics.html">Reports & Analytics</a></li>
+        <li><a href="archives-records.html">Archives & Records</a></li>
+        <li><a href="security-backup.html">Security & Backup</a></li>
+      </ul>
+    </nav>
+
+    <main class="main-content">
+      <div class="top-bar">
+        <div class="top-left"><h1>Tracking & Monitor</h1></div>
+        <div class="top-right">
+          <a href="admin-profile.html" class="user-info">
+            <span>Welcome, Admin</span>
+            <img src="images/profile.jpg" alt="Profile" class="profile-pic">
+          </a>
+        </div>
+      </div>
+
+      <section style="padding:18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;">
+          <div>
+          </div>
+
+          <div class="controls" aria-hidden="false">
+            <div class="left">
+              <input id="track-search" class="search-input" type="search" placeholder="Search by user name..." aria-label="Search logs by user">
+              <select id="time-range" class="select-range" aria-label="Time range">
+                <option value="7">Last 7 days</option>
+                <option value="30">Last 30 days</option>
+                <option value="1">Today</option>
+              </select>
+            </div>
+
+            <div class="right">
+              <button id="btn-export" class="btn secondary" title="Export selected logs">Export Selected</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-wrap" role="region" aria-labelledby="track-table-heading">
+          <table class="track-table" aria-describedby="track-table-desc">
+            <caption id="track-table-heading" style="text-align:left;padding:8px 0;font-weight:700;color:#4e342e;">Logs</caption>
+            <thead>
+              <tr>
+                <th style="width:40px;"><input id="select-all" type="checkbox" aria-label="Select all logs"></th>
+                <th>Date & Time</th>
+                <th>Document ID</th>
+                <th>User</th>
+                <th>From / To</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="logs-tbody">
+              <!-- populated by JS -->
+            </tbody>
+          </table>
+          <p id="track-table-desc" class="muted" style="padding:10px 0 0 12px;">Use the controls to filter logs. Select rows and click "Export Selected" to download CSV.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    /**
+     * Tracking & Monitor — backend-ready frontend
+     *
+     * Expected endpoints:
+     * GET  /api/tracking?range=<1|7|30>&q=<search>      -> returns [{id, datetime, documentId, userName, from, to, status}]
+     * POST /api/tracking/export                         -> accepts { ids: [...] } and returns CSV file (or 200)
+     *
+     * This script will attempt server calls and fall back to client-side sample data / CSV generation if needed.
+     */
+
+    (function(){
+      const api = {
+        list: '/api/tracking',
+        export: '/api/tracking/export'
+      };
+
+      // sample fallback data
+      const sampleLogs = [
+        { id: 'L-9001', datetime: '2025-10-10 09:12:23', documentId: 'DOC-1001', userName: 'Alice Santos', from: 'Dept A', to: 'Finance', status: 'processed' },
+        { id: 'L-9002', datetime: '2025-10-09 14:05:11', documentId: 'DOC-1002', userName: 'Mark Tan', from: 'Vendor X', to: 'Procurement', status: 'pending' },
+        { id: 'L-9003', datetime: '2025-10-08 08:45:00', documentId: 'DOC-1003', userName: 'Dr. Reyes', from: 'Research', to: 'Management', status: 'failed' },
+        { id: 'L-9004', datetime: '2025-10-10 11:00:00', documentId: 'DOC-1004', userName: 'Student One', from: 'Student', to: 'Records', status: 'processed' }
+      ];
+
+      // DOM refs
+      const logsTbody = document.getElementById('logs-tbody');
+      const searchInput = document.getElementById('track-search');
+      const timeRange = document.getElementById('time-range');
+      const btnExport = document.getElementById('btn-export');
+      const selectAllCheckbox = document.getElementById('select-all');
+
+      // state
+      let logsCache = [];
+
+      // helpers
+      function escapeHtml(s){ if (s===undefined || s===null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+      function statusClass(status){
+        const s = (status||'').toLowerCase();
+        if (s === 'processed' || s === 'ok' || s === 'success') return 'status-badge status-ok';
+        if (s === 'pending') return 'status-badge status-pending';
+        return 'status-badge status-failed';
+      }
+
+      // render
+      function renderLogs(list){
+        logsCache = list || [];
+        logsTbody.innerHTML = '';
+        if (!logsCache.length){
+          logsTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:18px;color:#666;">No logs found.</td></tr>';
+          return;
+        }
+        const frag = document.createDocumentFragment();
+        logsCache.forEach(log => {
+          const tr = document.createElement('tr');
+
+          const tdSel = document.createElement('td');
+          tdSel.style.width = '40px';
+          const cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.className = 'row-checkbox';
+          cb.dataset.id = log.id;
+          tdSel.appendChild(cb);
+
+          const tdDate = document.createElement('td'); tdDate.textContent = log.datetime || '';
+          const tdDoc = document.createElement('td'); tdDoc.textContent = log.documentId || '';
+          const tdUser = document.createElement('td'); tdUser.textContent = log.userName || '';
+          const tdFromTo = document.createElement('td'); tdFromTo.textContent = `${log.from || ''} → ${log.to || ''}`;
+          const tdStatus = document.createElement('td');
+          const sspan = document.createElement('span');
+          sspan.className = statusClass(log.status);
+          sspan.textContent = (log.status || '').charAt(0).toUpperCase() + (log.status || '').slice(1);
+          tdStatus.appendChild(sspan);
+
+          tr.appendChild(tdSel);
+          tr.appendChild(tdDate);
+          tr.appendChild(tdDoc);
+          tr.appendChild(tdUser);
+          tr.appendChild(tdFromTo);
+          tr.appendChild(tdStatus);
+
+          frag.appendChild(tr);
+        });
+        logsTbody.appendChild(frag);
+        updateSelectAllState();
+      }
+
+      // fetch logs from server (range = 1|7|30; q = search)
+      async function loadLogs(){
+        const range = timeRange.value || '7';
+        const q = (searchInput.value || '').trim();
+        const params = new URLSearchParams();
+        params.set('range', range);
+        if (q) params.set('q', q);
+        const url = `${api.list}?${params.toString()}`;
+
+        try {
+          const res = await fetch(url, { method:'GET', credentials:'same-origin' });
+          if (!res.ok) throw new Error('Network response not ok');
+          const data = await res.json();
+          logsCache = Array.isArray(data) ? data : [];
+        } catch (err) {
+          console.warn('Failed to fetch logs — using sample data', err);
+          logsCache = sampleLogs.slice();
+        }
+        renderLogs(logsCache);
+      }
+
+      // selection helpers
+      function getSelectedIds(){
+        return Array.from(document.querySelectorAll('.row-checkbox'))
+          .filter(cb => cb.checked)
+          .map(cb => cb.dataset.id);
+      }
+      function updateSelectAllState(){
+        const boxes = Array.from(document.querySelectorAll('.row-checkbox'));
+        if (boxes.length === 0) { selectAllCheckbox.checked = false; selectAllCheckbox.indeterminate = false; return; }
+        const checked = boxes.filter(b => b.checked).length;
+        selectAllCheckbox.checked = checked === boxes.length;
+        selectAllCheckbox.indeterminate = checked > 0 && checked < boxes.length;
+      }
+
+      // export selected rows
+      async function exportSelected(){
+        const ids = getSelectedIds();
+        if (ids.length === 0) { alert('No logs selected.'); return; }
+
+        // Try server-side export first
+        try {
+          const res = await fetch(api.export, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids })
+          });
+          // If server returns a CSV file directly (Content-Type: text/csv), download it
+          const ct = res.headers.get('Content-Type') || '';
+          if (res.ok && ct.includes('text/csv')) {
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `tracking_export_${Date.now()}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+            return;
+          }
+          // If server returns ok but no CSV, assume server processed and returns { success:true, csvUrl: "..." }
+          if (res.ok) {
+            const json = await res.json().catch(() => null);
+            if (json && json.csvUrl) {
+              window.location.assign(json.csvUrl);
+              return;
+            }
+          }
+          // Otherwise fall through to client-side CSV generation
+        } catch (err) {
+          console.warn('Server export failed or backend not available — falling back to client CSV generation', err);
+        }
+
+        // Fallback: generate CSV client-side from logsCache filtered by selected ids
+        const rows = logsCache.filter(r => ids.includes(r.id));
+        generateAndDownloadCSV(rows);
+      }
+
+      // client-side CSV generator
+      function generateAndDownloadCSV(rows){
+        const headers = ['Log ID','Date & Time','Document ID','User','From','To','Status'];
+        const csv = [ headers.join(',') ];
+        rows.forEach(r => {
+          const cols = [
+            `"${(r.id||'').replace(/"/g,'""')}"`,
+            `"${(r.datetime||'').replace(/"/g,'""')}"`,
+            `"${(r.documentId||'').replace(/"/g,'""')}"`,
+            `"${(r.userName||'').replace(/"/g,'""')}"`,
+            `"${(r.from||'').replace(/"/g,'""')}"`,
+            `"${(r.to||'').replace(/"/g,'""')}"`,
+            `"${(r.status||'').replace(/"/g,'""')}"`
+          ];
+          csv.push(cols.join(','));
+        });
+        const blob = new Blob([csv.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `tracking_export_${Date.now()}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      // events
+      selectAllCheckbox.addEventListener('change', () => {
+        const boxes = document.querySelectorAll('.row-checkbox');
+        boxes.forEach(b => b.checked = selectAllCheckbox.checked);
+      });
+      document.addEventListener('change', (e) => {
+        if (e.target && e.target.classList && e.target.classList.contains('row-checkbox')) updateSelectAllState();
+      });
+
+      btnExport.addEventListener('click', exportSelected);
+
+      // debounce helper
+      function debounce(fn, wait=350){
+        let t;
+        return function(...args){ clearTimeout(t); t = setTimeout(()=> fn.apply(this,args), wait); };
+      }
+      const debouncedLoad = debounce(loadLogs, 350);
+      searchInput.addEventListener('input', debouncedLoad);
+      timeRange.addEventListener('change', loadLogs);
+
+      // initial load
+      loadLogs();
+
+      // expose debug helper
+      window.tracking = { reload: loadLogs, cache: () => logsCache };
+    })();
+  </script>
+</body>
+</html>

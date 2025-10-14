@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>User Management</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/style.css"/>
+  <style>
+    /* page-specific styles (won't conflict with style.css) */
+    .page-controls {
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:flex-end;
+      margin-bottom:14px;
+    }
+    .control-left {
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+    .select-role {
+      padding:8px 12px;
+      border-radius:8px;
+      border:1px solid #ccc;
+      background:#fff;
+      font-weight:500;
+    }
+    .btn {
+      padding:8px 12px;
+      border-radius:8px;
+      border:none;
+      cursor:pointer;
+      font-weight:600;
+      background:#f06a27;
+      color:#fff;
+    }
+    .btn.secondary {
+      background:#6d4c41;
+    }
+    .table-wrap {
+      background:#fff;
+      border-radius:10px;
+      box-shadow:0 6px 18px rgba(0,0,0,0.06);
+      padding:12px;
+      overflow:auto;
+    }
+    table.users-table {
+      width:100%;
+      border-collapse:collapse;
+      min-width:800px;
+    }
+    table.users-table th,
+    table.users-table td {
+      padding:10px 12px;
+      border-bottom:1px solid #eee;
+      text-align:left;
+      font-size:0.95rem;
+    }
+    table.users-table th {
+      background:#f5f5f5;
+      color:#4e342e;
+      font-weight:600;
+    }
+    .action-btn {
+      padding:6px 10px;
+      border-radius:8px;
+      border:none;
+      cursor:pointer;
+      font-size:0.9rem;
+      margin-right:6px;
+    }
+    .action-btn.edit { background:#4caf50; color:#fff; }
+    .action-btn.delete { background:#e53935; color:#fff; }
+    .status-badge {
+      padding:6px 10px;
+      border-radius:20px;
+      font-weight:600;
+      font-size:0.85rem;
+      display:inline-block;
+    }
+    .status-active { background:#e8f5e9; color:#2e7d32; }
+    .status-inactive { background:#fff3e0; color:#ef6c00; }
+
+    /* search input */
+    .search-input {
+      padding:8px 12px;
+      border-radius:8px;
+      border:1px solid #ccc;
+      width:260px;
+    }
+    .search-input::placeholder { color:#999; }
+
+    /* modal */
+    .modal { display:none; position:fixed; inset:0; z-index:2000; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; }
+    .modal.show { display:flex; }
+    .modal-content {
+      width:520px;
+      max-width:95%;
+      background:#fff;
+      border-radius:12px;
+      padding:18px;
+      box-shadow:0 8px 30px rgba(0,0,0,0.2);
+    }
+    .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+    .modal-close { background:transparent; border:none; font-size:20px; cursor:pointer; }
+    .form-row { display:flex; gap:12px; }
+    .form-col { flex:1; display:flex; flex-direction:column; margin-bottom:10px; }
+    .form-col label { font-weight:600; margin-bottom:6px; }
+    .form-control { padding:8px 10px; border-radius:8px; border:1px solid #ccc; }
+    .modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:8px; }
+    @media (max-width:640px) {
+      .form-row { flex-direction:column; }
+      .page-controls { flex-direction:column; align-items:stretch; gap:8px; }
+      .control-left { order:2; justify-content:flex-end; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="sidebar">
+      <h1>DTS Admin</h1>
+      <ul>
+        <li><a href="admin-dashboard.html">Dashboard</a></li>
+        <li><a href="user-management.html" class="active">User Management</a></li>
+        <li><a href="document-routing.html">Document Routing</a></li>
+        <li><a href="tracking-monitor.html">Tracking & Monitor</a></li>
+        <li><a href="reports-analytics.html">Reports & Analytics</a></li>
+        <li><a href="archives-records.html">Archives & Records</a></li>
+        <li><a href="security-backup.html">Security & Backup</a></li>
+      </ul>
+    </nav>
+
+    <main class="main-content">
+      <div class="top-bar">
+        <div class="top-left"><h1>User Management</h1></div>
+        <div class="top-right">
+          <a href="admin-profile.html" class="user-info">
+            <span>Welcome, Admin</span>
+            <img src="images/profile.jpg" alt="Profile" class="profile-pic">
+          </a>
+        </div>
+      </div>
+
+      <section style="padding:18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div>
+          </div>
+
+          <div class="page-controls" aria-hidden="false">
+            <div class="control-left">
+              <input id="user-search" class="search-input" type="search" placeholder="Search by name..." aria-label="Search users by name">
+              <select id="role-filter" class="select-role" aria-label="Filter by role">
+                <option value="all">All Roles</option>
+                <option value="Admin">Admin</option>
+                <option value="Staff">Staff</option>
+                <option value="Faculty">Faculty</option>
+                <option value="Student">Student</option>
+              </select>
+            </div>
+
+            <div>
+              <button id="btn-add-user" class="btn">Add New User</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-wrap" role="region" aria-labelledby="user-table-heading">
+          <table class="users-table" aria-describedby="user-table-desc">
+            <caption id="user-table-heading" style="text-align:left;padding:8px 0;font-weight:700;color:#4e342e;">Users</caption>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Department</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-tbody">
+              <!-- populated by JS -->
+            </tbody>
+          </table>
+          <p id="user-table-desc" class="small-note" style="padding:10px 0 0 12px;">Showing results. Use role filter or search to narrow down.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Add/Edit User Modal -->
+  <div id="user-modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-title">Add User</h3>
+        <button class="modal-close" id="modal-close">&times;</button>
+      </div>
+
+      <form id="user-form">
+        <input type="hidden" id="user-id" />
+        <div class="form-row">
+          <div class="form-col">
+            <label for="user-name">Full Name</label>
+            <input id="user-name" name="name" class="form-control" required />
+          </div>
+          <div class="form-col">
+            <label for="user-email">Email</label>
+            <input id="user-email" name="email" type="email" class="form-control" required />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-col">
+            <label for="user-role">Role</label>
+            <select id="user-role" name="role" class="form-control" required>
+              <option value="">Select role</option>
+              <option>Admin</option>
+              <option>Staff</option>
+              <option>Faculty</option>
+              <option>Student</option>
+            </select>
+          </div>
+          <div class="form-col">
+            <label for="user-dept">Department</label>
+            <input id="user-dept" name="department" class="form-control" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-col">
+            <label for="user-status">Status</label>
+            <select id="user-status" name="status" class="form-control" required>
+              <option value="">Select status</option>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
+
+          <div class="form-col">
+            <label for="user-password">Password</label>
+            <input id="user-password" name="password" type="password" class="form-control" placeholder="Leave blank to keep existing" />
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn secondary" id="modal-cancel">Cancel</button>
+          <button type="submit" class="btn" id="modal-save">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Backend-ready User Management JS (vanilla) with name search (client-side + debounced server)
+    // Endpoints (change to match your API):
+    // GET  /api/users              -> list all users (optionally ?role=&q=)
+    // POST /api/users              -> create user (body JSON)
+    // PUT  /api/users/:id          -> update user (body JSON)
+    // DELETE /api/users/:id        -> delete user
+
+    (function(){
+      const api = {
+        list: '/api/users',               // supports optional ?role=RoleName& q=searchText
+        create: '/api/users',
+        update: id => `/api/users/${id}`,
+        delete: id => `/api/users/${id}`
+      };
+
+      // DOM refs
+      const roleFilter = document.getElementById('role-filter');
+      const usersTbody = document.getElementById('users-tbody');
+      const btnAddUser = document.getElementById('btn-add-user');
+      const userModal = document.getElementById('user-modal');
+      const modalTitle = document.getElementById('modal-title');
+      const modalClose = document.getElementById('modal-close');
+      const modalCancel = document.getElementById('modal-cancel');
+      const userForm = document.getElementById('user-form');
+      const searchInput = document.getElementById('user-search');
+
+      // Form fields
+      const fldId = document.getElementById('user-id');
+      const fldName = document.getElementById('user-name');
+      const fldEmail = document.getElementById('user-email');
+      const fldRole = document.getElementById('user-role');
+      const fldDept = document.getElementById('user-dept');
+      const fldStatus = document.getElementById('user-status');
+      const fldPassword = document.getElementById('user-password');
+
+      // sample fallback data (used when backend unreachable)
+      let sampleUsers = [
+        { id: '1', name: 'Alice Santos', email: 'alice@example.com', role: 'Admin', department: 'IT', status: 'Active' },
+        { id: '2', name: 'Mark Tan', email: 'mark@example.com', role: 'Staff', department: 'Finance', status: 'Active' },
+        { id: '3', name: 'Dr. Reyes', email: 'reyes@example.com', role: 'Faculty', department: 'Research', status: 'Inactive' },
+        { id: '4', name: 'Student One', email: 'student1@example.com', role: 'Student', department: 'Engineering', status: 'Active' }
+      ];
+
+      let usersCache = [];      // full server-side results
+      let filteredCache = [];   // currently displayed after client-side filters
+
+      // helpers
+      function escapeHtml(s){ if (s === undefined || s === null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+      function showModal(mode, user){
+        modalTitle.textContent = mode === 'edit' ? 'Edit User' : 'Add User';
+        if (user){
+          fldId.value = user.id || '';
+          fldName.value = user.name || '';
+          fldEmail.value = user.email || '';
+          fldRole.value = user.role || '';
+          fldDept.value = user.department || '';
+          fldStatus.value = user.status || '';
+          fldPassword.value = '';
+        } else {
+          fldId.value = '';
+          userForm.reset();
+          fldPassword.value = '';
+        }
+        userModal.classList.add('show');
+        userModal.setAttribute('aria-hidden', 'false');
+      }
+      function hideModal(){
+        userModal.classList.remove('show');
+        userModal.setAttribute('aria-hidden', 'true');
+      }
+
+      // Render functions
+      function renderTable(users){
+        filteredCache = users || [];
+        usersTbody.innerHTML = '';
+        if (!users || users.length === 0){
+          usersTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:18px;color:#666;">No users found.</td></tr>';
+          return;
+        }
+        const frag = document.createDocumentFragment();
+        users.forEach(u => {
+          const tr = document.createElement('tr');
+
+          const nameTd = document.createElement('td');
+          nameTd.innerHTML = `<strong>${escapeHtml(u.name)}</strong>`;
+
+          const emailTd = document.createElement('td');
+          emailTd.textContent = u.email || '';
+
+          const roleTd = document.createElement('td');
+          roleTd.textContent = u.role || '';
+
+          const deptTd = document.createElement('td');
+          deptTd.textContent = u.department || '';
+
+          const statusTd = document.createElement('td');
+          const statusSpan = document.createElement('span');
+          statusSpan.className = 'status-badge ' + (u.status === 'Active' ? 'status-active' : 'status-inactive');
+          statusSpan.textContent = u.status || '';
+          statusTd.appendChild(statusSpan);
+
+          const actionsTd = document.createElement('td');
+          // Edit button
+          const btnEdit = document.createElement('button');
+          btnEdit.className = 'action-btn edit';
+          btnEdit.textContent = 'Edit';
+          btnEdit.addEventListener('click', () => onEditUser(u));
+
+          // Delete button
+          const btnDelete = document.createElement('button');
+          btnDelete.className = 'action-btn delete';
+          btnDelete.textContent = 'Delete';
+          btnDelete.addEventListener('click', () => onDeleteUser(u));
+
+          actionsTd.appendChild(btnEdit);
+          actionsTd.appendChild(btnDelete);
+
+          tr.appendChild(nameTd);
+          tr.appendChild(emailTd);
+          tr.appendChild(roleTd);
+          tr.appendChild(deptTd);
+          tr.appendChild(statusTd);
+          tr.appendChild(actionsTd);
+
+          frag.appendChild(tr);
+        });
+        usersTbody.appendChild(frag);
+      }
+
+      // Filtering (client-side immediate)
+      function applyClientFilters(){
+        const q = (searchInput.value || '').trim().toLowerCase();
+        const role = roleFilter.value;
+        let list = usersCache.slice();
+        if (role && role !== 'all') list = list.filter(u => String(u.role || '').toLowerCase() === role.toLowerCase());
+        if (q) list = list.filter(u => (u.name || '').toLowerCase().includes(q));
+        renderTable(list);
+      }
+
+      // Debounce helper
+      function debounce(fn, wait){
+        let t;
+        return function(...args){
+          clearTimeout(t);
+          t = setTimeout(() => fn.apply(this, args), wait);
+        };
+      }
+
+      // Fetch from backend (server-side search)
+      async function fetchUsersFromServer(role = 'all', q = ''){
+        let url = api.list;
+        const params = new URLSearchParams();
+        if (role && role !== 'all') params.set('role', role);
+        if (q) params.set('q', q);
+        if ([...params].length) url += `?${params.toString()}`;
+
+        try {
+          const res = await fetch(url, { method: 'GET', credentials: 'same-origin' });
+          if (!res.ok) throw new Error('Network response not ok');
+          const data = await res.json();
+          usersCache = Array.isArray(data) ? data : [];
+        } catch (err) {
+          console.warn('Failed to fetch users from backend — using sample data', err);
+          usersCache = sampleUsers.slice();
+        }
+        applyClientFilters(); // apply current client filters (search + role) on fresh cache
+      }
+
+      // public fetchUsers (used on role change / initial load)
+      function fetchUsers(role = 'all'){
+        // immediately try server (non-blocking)
+        fetchUsersFromServer(role, searchInput.value.trim());
+      }
+
+      // handlers
+      function onEditUser(user){
+        showModal('edit', user);
+      }
+
+      function onDeleteUser(user){
+        if (!confirm(`Delete user "${user.name}"? This action cannot be undone.`)) return;
+        const id = user.id;
+        // optimistic UI
+        usersCache = usersCache.filter(u => String(u.id) !== String(id));
+        applyClientFilters();
+
+        // call backend
+        fetch(api.delete(id), { method: 'DELETE', credentials: 'same-origin' })
+          .then(res => {
+            if (!res.ok) console.warn('Delete returned non-ok status', res.status);
+          })
+          .catch(err => {
+            console.error('Delete request failed', err);
+            alert('Failed to delete on server. Refresh to re-sync.');
+          });
+      }
+
+      // submit add/edit
+      userForm.addEventListener('submit', async function(e){
+        e.preventDefault();
+        const payload = {
+          name: fldName.value.trim(),
+          email: fldEmail.value.trim(),
+          role: fldRole.value,
+          department: fldDept.value.trim(),
+          status: fldStatus.value
+        };
+        const id = fldId.value;
+        const password = fldPassword.value;
+        if (password) payload.password = password; // only include if provided
+
+        try {
+          if (id){
+            // update
+            const res = await fetch(api.update(id), {
+              method: 'PUT',
+              credentials: 'same-origin',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+            if (!res.ok) throw new Error('Update failed');
+            // update local cache (optimistic)
+            usersCache = usersCache.map(u => String(u.id) === String(id) ? { ...u, ...payload, id } : u);
+            applyClientFilters();
+            hideModal();
+          } else {
+            // create
+            const res = await fetch(api.create, {
+              method: 'POST',
+              credentials: 'same-origin',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+            if (!res.ok) throw new Error('Create failed');
+            const newUser = await res.json();
+            usersCache.unshift(newUser || { id: Date.now(), ...payload });
+            applyClientFilters();
+            hideModal();
+          }
+        } catch (err) {
+          console.warn('Create/Update failed, applying optimistic fallback and logging error', err);
+          if (id){
+            usersCache = usersCache.map(u => String(u.id) === String(id) ? { ...u, ...payload, id } : u);
+          } else {
+            usersCache.unshift({ id: Date.now(), ...payload });
+          }
+          applyClientFilters();
+          hideModal();
+        }
+      });
+
+      // modal controls
+      btnAddUser.addEventListener('click', () => showModal('add', null));
+      modalClose.addEventListener('click', hideModal);
+      modalCancel.addEventListener('click', hideModal);
+      userModal.addEventListener('click', (e) => { if (e.target === userModal) hideModal(); });
+
+      // filter change
+      roleFilter.addEventListener('change', () => {
+        // immediate client-side filtering if cache exists
+        applyClientFilters();
+        // also fetch from server for accurate results
+        debouncedServerFetch(roleFilter.value, searchInput.value.trim());
+      });
+
+      // search input: immediate client-side filter + debounced server fetch
+      const debouncedServerFetch = debounce((role, q) => {
+        fetchUsersFromServer(role, q);
+      }, 500);
+
+      searchInput.addEventListener('input', () => {
+        // immediate responsiveness from cache
+        applyClientFilters();
+        // debounced server fetch to update cache
+        debouncedServerFetch(roleFilter.value, searchInput.value.trim());
+      });
+
+      // initial load
+      fetchUsers('all');
+
+      // Expose small debug helpers (optional)
+      window.userMgmt = {
+        reload: () => fetchUsers(roleFilter.value),
+        getCache: () => usersCache
+      };
+    })();
+  </script>
+</body>
+</html>

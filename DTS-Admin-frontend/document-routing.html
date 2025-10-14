@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Document Routing</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* page-specific UI (keeps using your style.css) */
+    .controls {
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:14px;
+      flex-wrap:wrap;
+    }
+    .controls .left {
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .search-input {
+      padding:8px 12px;
+      border-radius:8px;
+      border:1px solid #ccc;
+      width:320px;
+    }
+    .select-status {
+      padding:8px 12px;
+      border-radius:8px;
+      border:1px solid #ccc;
+      background:#fff;
+      font-weight:500;
+    }
+    .btn {
+      padding:8px 12px;
+      border-radius:8px;
+      border:none;
+      cursor:pointer;
+      font-weight:600;
+      background:#f06a27;
+      color:#fff;
+    }
+    .btn.secondary { background:#6d4c41; }
+    .btn.ghost {
+      background:transparent;
+      border:1px solid #ccc;
+      color:#4e342e;
+    }
+    .table-wrap {
+      background:#fff;
+      border-radius:10px;
+      box-shadow:0 6px 18px rgba(0,0,0,0.06);
+      padding:12px;
+      overflow:auto;
+    }
+    table.docs-table {
+      width:100%;
+      border-collapse:collapse;
+      min-width:900px;
+    }
+    table.docs-table th,
+    table.docs-table td {
+      padding:10px 12px;
+      border-bottom:1px solid #eee;
+      text-align:left;
+      font-size:0.95rem;
+      vertical-align:middle;
+    }
+    table.docs-table th { background:#f5f5f5; color:#4e342e; font-weight:600; }
+    .action-btn { padding:6px 10px; border-radius:8px; border:none; cursor:pointer; font-size:0.9rem; margin-right:6px; }
+    .action-approve { background:#4caf50; color:#fff; }
+    .action-reject { background:#e53935; color:#fff; }
+    .action-history { background:#1976d2; color:#fff; }
+    .priority-pill { padding:6px 10px; border-radius:20px; font-weight:600; display:inline-block; font-size:0.85rem;}
+    .priority-high { background:#fff3e0; color:#ef6c00; }
+    .priority-normal { background:#e8f5e9; color:#2e7d32;}
+    .priority-low { background:#e8eaf6; color:#283593; }
+    .status-badge { padding:6px 10px; border-radius:20px; font-weight:600; font-size:0.85rem; display:inline-block; }
+    .status-approved { background:#e8f5e9; color:#2e7d32; }
+    .status-pending { background:#fff3e0; color:#ef6c00; }
+    .status-rejected { background:#ffebee; color:#c62828; }
+
+    /* small helpers */
+    .controls .right { display:flex; gap:8px; align-items:center; }
+    .muted { color:#666; font-size:0.95rem; }
+
+    @media (max-width:900px) {
+      .search-input { width:220px; }
+      .controls { gap:8px; }
+    }
+    @media (max-width:640px) {
+      .controls { flex-direction:column; align-items:stretch; }
+      .controls .left, .controls .right { justify-content:space-between; width:100%; }
+      .search-input { width:100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="sidebar">
+      <h1>DTS Admin</h1>
+      <ul>
+        <li><a href="admin-dashboard.html">Dashboard</a></li>
+        <li><a href="user-management.html">User Management</a></li>
+        <li><a href="document-routing.html" class="active">Document Routing</a></li>
+        <li><a href="tracking-monitor.html">Tracking & Monitor</a></li>
+        <li><a href="reports-analytics.html">Reports & Analytics</a></li>
+        <li><a href="archives-records.html">Archives & Records</a></li>
+        <li><a href="security-backup.html">Security & Backup</a></li>
+      </ul>
+    </nav>
+
+    <main class="main-content">
+      <div class="top-bar">
+        <div class="top-left"><h1>Document Routing</h1></div>
+        <div class="top-right">
+          <a href="admin-profile.html" class="user-info">
+            <span>Welcome, Admin</span>
+            <img src="images/profile.jpg" alt="Profile" class="profile-pic">
+          </a>
+        </div>
+      </div>
+
+      <section style="padding:18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;">
+          <div>
+          </div>
+
+          <div class="controls" aria-hidden="false">
+            <div class="left">
+              <input id="doc-search" class="search-input" type="search" placeholder="Search by document title..." aria-label="Search documents by title">
+              <select id="status-filter" class="select-status" aria-label="Filter by status">
+                <option value="all">All Status</option>
+                <option value="incoming">Incoming</option>
+                <option value="outgoing">Outgoing</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+
+            <div class="right">
+              <button id="btn-bulk-approve" class="btn secondary" title="Approve all selected (only pending)">Bulk Approve</button>
+              <button id="btn-forward-selected" class="btn" title="Forward selected documents to another user">Forward Selected</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-wrap" role="region" aria-labelledby="docs-table-heading">
+          <table class="docs-table" aria-describedby="docs-table-desc">
+            <caption id="docs-table-heading" style="text-align:left;padding:8px 0;font-weight:700;color:#4e342e;">Documents</caption>
+            <thead>
+              <tr>
+                <th style="width:40px;"><input id="select-all" type="checkbox" aria-label="Select all documents"></th>
+                <th>Document ID</th>
+                <th>Title</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="docs-tbody">
+              <!-- populated by JS -->
+            </tbody>
+          </table>
+          <p id="docs-table-desc" class="muted" style="padding:10px 0 0 12px;">Select documents to perform bulk actions. Use filters to narrow results.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- History modal -->
+  <div id="history-modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-content">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h3 id="history-title">Document History</h3>
+        <button class="modal-close" id="history-close">&times;</button>
+      </div>
+      <div id="history-body" style="max-height:60vh; overflow:auto; font-size:0.95rem; color:#333;">
+        <!-- filled by JS -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* Backend-ready Document Routing page
+       Endpoints (adjust to your API):
+       GET    /api/documents                    -> list (supports ?status=&q=)
+       PUT    /api/documents/:id/approve        -> approve single doc
+       PUT    /api/documents/:id/reject         -> reject single doc
+       POST   /api/documents/bulk-approve       -> { ids: [...] }
+       POST   /api/documents/forward            -> { ids: [...], to: "recipientIdOrName" }
+       GET    /api/documents/:id/history        -> returns array of history events
+       POST   /api/notifications                -> { userId, message }  (optional for notifying client)
+    */
+
+    (function(){
+      const api = {
+        list: '/api/documents',
+        approve: id => `/api/documents/${id}/approve`,
+        reject: id => `/api/documents/${id}/reject`,
+        bulkApprove: '/api/documents/bulk-approve',
+        forward: '/api/documents/forward',
+        history: id => `/api/documents/${id}/history`,
+        notify: '/api/notifications'
+      };
+
+      // Sample fallback data when backend not reachable
+      let sampleDocs = [
+        { id: 'DOC-1001', title: 'Purchase Request - Office Supplies', from: 'Alice Santos', to: 'Procurement', priority: 'Normal', status: 'pending' , direction:'incoming'},
+        { id: 'DOC-1002', title: 'Invoice #567 - Vendor X', from: 'Vendor X', to: 'Finance', priority: 'High', status: 'approved', direction:'incoming'},
+        { id: 'DOC-1003', title: 'Contract Renewal - Dept A', from: 'Dept A', to: 'Legal', priority: 'Slow', status: 'pending', direction:'outgoing'},
+        { id: 'DOC-1004', title: 'Report Q3', from: 'Research', to: 'Management', priority: 'Normal', status: 'rejected', direction:'incoming'}
+      ];
+
+      // DOM refs
+      const docsTbody = document.getElementById('docs-tbody');
+      const searchInput = document.getElementById('doc-search');
+      const statusFilter = document.getElementById('status-filter');
+      const selectAllCheckbox = document.getElementById('select-all');
+      const btnBulkApprove = document.getElementById('btn-bulk-approve');
+      const btnForward = document.getElementById('btn-forward-selected');
+
+      const historyModal = document.getElementById('history-modal');
+      const historyClose = document.getElementById('history-close');
+      const historyBody = document.getElementById('history-body');
+      const historyTitle = document.getElementById('history-title');
+
+      // state
+      let docsCache = [];
+      let displayed = [];
+
+      // helpers
+      function escapeHtml(s){ if (s === undefined || s === null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+      function formatPriorityClass(p){
+        const v = (p||'').toLowerCase();
+        if (v.includes('high')) return 'priority-pill priority-high';
+        if (v.includes('slow') || v.includes('low')) return 'priority-pill priority-low';
+        return 'priority-pill priority-normal';
+      }
+      function statusClass(s){
+        const v = (s||'').toLowerCase();
+        if (v === 'approved') return 'status-badge status-approved';
+        if (v === 'rejected') return 'status-badge status-rejected';
+        return 'status-badge status-pending';
+      }
+
+      // fetch list from server (supports ?status=&q=)
+      async function loadDocs() {
+        const q = searchInput.value.trim();
+        const status = statusFilter.value;
+        const params = new URLSearchParams();
+        if (status && status !== 'all') params.set('status', status);
+        if (q) params.set('q', q);
+        const url = params.toString() ? `${api.list}?${params.toString()}` : api.list;
+
+        try {
+          const res = await fetch(url, { method: 'GET', credentials: 'same-origin' });
+          if (!res.ok) throw new Error('Network response not ok');
+          const data = await res.json();
+          docsCache = Array.isArray(data) ? data : [];
+        } catch (err) {
+          console.warn('Failed to fetch documents — using sample data', err);
+          // adapt sample to expected fields: status: 'pending'|'approved' etc, priority values
+          docsCache = sampleDocs.slice();
+        }
+        renderDocs(docsCache);
+      }
+
+      function renderDocs(list){
+        displayed = list || [];
+        docsTbody.innerHTML = '';
+        if (displayed.length === 0){
+          docsTbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:18px;color:#666;">No documents found.</td></tr>';
+          return;
+        }
+
+        const frag = document.createDocumentFragment();
+        displayed.forEach(doc => {
+          const tr = document.createElement('tr');
+
+          // checkbox column
+          const tdSel = document.createElement('td');
+          tdSel.style.width = '40px';
+          const cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.className = 'row-checkbox';
+          cb.dataset.id = doc.id;
+          tdSel.appendChild(cb);
+
+          // doc id
+          const tdId = document.createElement('td');
+          tdId.textContent = doc.id || '';
+
+          // title
+          const tdTitle = document.createElement('td');
+          tdTitle.textContent = doc.title || '';
+
+          // from
+          const tdFrom = document.createElement('td');
+          tdFrom.textContent = doc.from || '';
+
+          // to
+          const tdTo = document.createElement('td');
+          tdTo.textContent = doc.to || '';
+
+          // priority
+          const tdPriority = document.createElement('td');
+          const pspan = document.createElement('span');
+          pspan.className = formatPriorityClass(doc.priority || 'Normal');
+          pspan.textContent = doc.priority || 'Normal';
+          tdPriority.appendChild(pspan);
+
+          // status
+          const tdStatus = document.createElement('td');
+          const sspan = document.createElement('span');
+          sspan.className = statusClass(doc.status);
+          sspan.textContent = (doc.status || 'pending').charAt(0).toUpperCase() + (doc.status || 'pending').slice(1);
+          tdStatus.appendChild(sspan);
+
+          // actions
+          const tdActions = document.createElement('td');
+          if ((doc.status || '').toLowerCase() === 'approved') {
+            const btnHist = document.createElement('button');
+            btnHist.className = 'action-btn action-history';
+            btnHist.textContent = 'View History';
+            btnHist.addEventListener('click', () => showHistory(doc.id, doc.title));
+            tdActions.appendChild(btnHist);
+          } else if ((doc.status || '').toLowerCase() === 'rejected') {
+            const btnHist = document.createElement('button');
+            btnHist.className = 'action-btn action-history';
+            btnHist.textContent = 'View History';
+            btnHist.addEventListener('click', () => showHistory(doc.id, doc.title));
+            tdActions.appendChild(btnHist);
+          } else { // pending or other -> show approve / reject
+            const btnApp = document.createElement('button');
+            btnApp.className = 'action-btn action-approve';
+            btnApp.textContent = 'Approve';
+            btnApp.addEventListener('click', () => approveSingle(doc.id));
+
+            const btnRej = document.createElement('button');
+            btnRej.className = 'action-btn action-reject';
+            btnRej.textContent = 'Reject';
+            btnRej.addEventListener('click', () => rejectSingle(doc.id));
+
+            tdActions.appendChild(btnApp);
+            tdActions.appendChild(btnRej);
+          }
+
+          tr.appendChild(tdSel);
+          tr.appendChild(tdId);
+          tr.appendChild(tdTitle);
+          tr.appendChild(tdFrom);
+          tr.appendChild(tdTo);
+          tr.appendChild(tdPriority);
+          tr.appendChild(tdStatus);
+          tr.appendChild(tdActions);
+
+          frag.appendChild(tr);
+        });
+        docsTbody.appendChild(frag);
+        updateSelectAllState();
+      }
+
+      // selection helpers
+      function getSelectedIds(){
+        return Array.from(document.querySelectorAll('.row-checkbox'))
+          .filter(cb => cb.checked)
+          .map(cb => cb.dataset.id);
+      }
+      function updateSelectAllState(){
+        const boxes = Array.from(document.querySelectorAll('.row-checkbox'));
+        if (boxes.length === 0) { selectAllCheckbox.checked = false; selectAllCheckbox.indeterminate = false; return; }
+        const checked = boxes.filter(b => b.checked).length;
+        selectAllCheckbox.checked = checked === boxes.length;
+        selectAllCheckbox.indeterminate = checked > 0 && checked < boxes.length;
+      }
+
+      // actions
+      async function approveSingle(id){
+        if (!confirm('Approve this document?')) return;
+        try {
+          const res = await fetch(api.approve(id), { method:'PUT', credentials:'same-origin' });
+          if (!res.ok) throw new Error('Approve failed');
+          // optimistic UI: update local cache then re-render
+          docsCache = docsCache.map(d => d.id === id ? { ...d, status:'approved' } : d);
+          renderDocs(docsCache);
+          notifyOnApproval(id);
+        } catch (err) {
+          console.warn('Approve failed — applying optimistic update and logging', err);
+          docsCache = docsCache.map(d => d.id === id ? { ...d, status:'approved' } : d);
+          renderDocs(docsCache);
+          notifyOnApproval(id);
+        }
+      }
+
+      async function rejectSingle(id){
+        if (!confirm('Reject this document?')) return;
+        try {
+          const res = await fetch(api.reject(id), { method:'PUT', credentials:'same-origin' });
+          if (!res.ok) throw new Error('Reject failed');
+          docsCache = docsCache.map(d => d.id === id ? { ...d, status:'rejected' } : d);
+          renderDocs(docsCache);
+        } catch (err) {
+          console.warn('Reject failed — applying optimistic update and logging', err);
+          docsCache = docsCache.map(d => d.id === id ? { ...d, status:'rejected' } : d);
+          renderDocs(docsCache);
+        }
+      }
+
+      // bulk approve
+      async function bulkApproveSelected(){
+        const ids = getSelectedIds();
+        if (ids.length === 0) { alert('No documents selected.'); return; }
+        if (!confirm(`Approve ${ids.length} selected document(s)?`)) return;
+        // filter only those that are pending (defensive)
+        const valid = ids.filter(id => {
+          const d = docsCache.find(x => x.id === id);
+          return d && String((d.status||'')).toLowerCase() === 'pending';
+        });
+        if (valid.length === 0) { alert('No pending documents selected to approve.'); return; }
+
+        try {
+          const res = await fetch(api.bulkApprove, {
+            method:'POST',
+            credentials:'same-origin',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ ids: valid })
+          });
+          if (!res.ok) throw new Error('Bulk approve failed');
+          // optimistic: update cache
+          docsCache = docsCache.map(d => valid.includes(d.id) ? { ...d, status:'approved' } : d);
+          renderDocs(docsCache);
+          // notify for each approved doc (backend should also notify)
+          valid.forEach(id => notifyOnApproval(id));
+        } catch (err) {
+          console.warn('Bulk approve failed — applying optimistic update and logging', err);
+          docsCache = docsCache.map(d => valid.includes(d.id) ? { ...d, status:'approved' } : d);
+          renderDocs(docsCache);
+          valid.forEach(id => notifyOnApproval(id));
+        }
+      }
+
+      // forward selected
+      async function forwardSelected(){
+        const ids = getSelectedIds();
+        if (ids.length === 0) { alert('No documents selected.'); return; }
+        const to = prompt('Enter recipient (name or user id) to forward selected documents to:');
+        if (!to) return;
+        try {
+          const res = await fetch(api.forward, {
+            method:'POST',
+            credentials:'same-origin',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ ids, to })
+          });
+          if (!res.ok) throw new Error('Forward failed');
+          alert('Documents forwarded.');
+          // optionally update a "last forwarded" field or status — for now we just reload
+          loadDocs();
+        } catch (err) {
+          console.warn('Forward failed', err);
+          alert('Forward failed (see console).');
+        }
+      }
+
+      // history modal
+      async function showHistory(id, title){
+        historyTitle.textContent = `History — ${title || id}`;
+        historyBody.innerHTML = '<p class="muted">Loading history…</p>';
+        historyModal.classList.add('show');
+        historyModal.setAttribute('aria-hidden','false');
+        try {
+          const res = await fetch(api.history(id), { method:'GET', credentials:'same-origin' });
+          if (!res.ok) throw new Error('History fetch failed');
+          const data = await res.json();
+          renderHistory(data);
+        } catch (err) {
+          console.warn('Failed to fetch history — using sample', err);
+          // fallback sample history
+          const sample = [
+            { when:'2025-09-01 10:00', who:'Alice Santos', event:'Created' },
+            { when:'2025-09-02 09:15', who:'Mark Tan', event:'Sent to Finance' },
+            { when:'2025-09-05 14:30', who:'Manager', event:'Approved' }
+          ];
+          renderHistory(sample);
+        }
+      }
+
+      function renderHistory(events){
+        if (!events || events.length === 0) {
+          historyBody.innerHTML = '<p class="muted">No history available.</p>';
+          return;
+        }
+        const html = events.map(ev => `<div style="padding:8px 0;border-bottom:1px solid #eee;"><strong style="color:#4e342e">${escapeHtml(ev.event)}</strong><div style="color:#666;font-size:0.95rem">${escapeHtml(ev.who)} • ${escapeHtml(ev.when)}</div></div>`).join('');
+        historyBody.innerHTML = html;
+      }
+
+      // notifications (attempt to create server-side notification, and trigger frontend hook if present)
+      async function notifyOnApproval(docId){
+        // try server notification (backend should deliver to relevant client)
+        try {
+          await fetch(api.notify, {
+            method:'POST',
+            credentials:'same-origin',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ target: 'document', id: docId, message: `Your document ${docId} was approved.` })
+          });
+        } catch (err) {
+          console.warn('Notify API failed (ok if backend unavailable):', err);
+        }
+
+        // If the client site has a global addNotification function (your earlier client JS), try calling it.
+        try {
+          if (window.addNotification && typeof window.addNotification === 'function') {
+            window.addNotification(`Document ${docId} approved`);
+          }
+        } catch (err) {
+          // no-op
+        }
+      }
+
+      // events
+      // select all checkbox
+      selectAllCheckbox.addEventListener('change', () => {
+        const boxes = document.querySelectorAll('.row-checkbox');
+        boxes.forEach(b => { b.checked = selectAllCheckbox.checked; });
+      });
+
+      // delegate selection change to update selectAll state
+      document.addEventListener('change', (e) => {
+        if (e.target && e.target.classList && e.target.classList.contains('row-checkbox')) {
+          updateSelectAllState();
+        }
+      });
+
+      // attach control buttons
+      btnBulkApprove.addEventListener('click', bulkApproveSelected);
+      btnForward.addEventListener('click', forwardSelected);
+
+      // search & status filter (debounced)
+      function debounce(fn, wait = 300){
+        let t;
+        return function(...args){
+          clearTimeout(t);
+          t = setTimeout(() => fn.apply(this, args), wait);
+        };
+      }
+      const debouncedLoad = debounce(loadDocs, 350);
+      searchInput.addEventListener('input', debouncedLoad);
+      statusFilter.addEventListener('change', loadDocs);
+
+      // history modal close
+      historyClose.addEventListener('click', () => {
+        historyModal.classList.remove('show');
+        historyModal.setAttribute('aria-hidden','true');
+      });
+      historyModal.addEventListener('click', (e) => { if (e.target === historyModal) { historyModal.classList.remove('show'); historyModal.setAttribute('aria-hidden','true'); } });
+
+      // initial
+      loadDocs();
+
+      // expose simple helpers for debugging
+      window.docRouting = {
+        reload: loadDocs,
+        getCache: () => docsCache,
+        selectAll: () => document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = true)
+      };
+    })();
+  </script>
+</body>
+</html>

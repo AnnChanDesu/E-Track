@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Archives & Records</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* page-specific styles */
+    .controls {
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:14px;
+      flex-wrap:wrap;
+    }
+    .controls .left {
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .select {
+      padding:8px 12px;
+      border-radius:8px;
+      border:1px solid #ccc;
+      background:#fff;
+      font-weight:500;
+    }
+    .search-input {
+      padding:8px 12px;
+      border-radius:8px;
+      border:1px solid #ccc;
+      width:260px;
+    }
+    .btn { padding:8px 12px; border-radius:8px; border:none; cursor:pointer; font-weight:600; background:#f06a27; color:#fff; }
+    .table-wrap {
+      background:#fff;
+      border-radius:10px;
+      box-shadow:0 6px 18px rgba(0,0,0,0.06);
+      padding:12px;
+      overflow:auto;
+    }
+    table.archives-table {
+      width:100%;
+      border-collapse:collapse;
+      min-width:800px;
+    }
+    table.archives-table th,
+    table.archives-table td {
+      padding:10px 12px;
+      border-bottom:1px solid #eee;
+      text-align:left;
+      font-size:0.95rem;
+      vertical-align:middle;
+    }
+    table.archives-table th { background:#f5f5f5; color:#4e342e; font-weight:600; }
+    .action-btn {
+      padding:6px 10px;
+      border-radius:8px;
+      border:none;
+      cursor:pointer;
+      font-size:0.9rem;
+      margin-right:6px;
+    }
+    .action-receive { background:#4caf50; color:#fff; }
+    .action-download { background:#1976d2; color:#fff; }
+    .received-badge { padding:6px 10px; border-radius:20px; background:#e8f5e9; color:#2e7d32; font-weight:700; display:inline-block; }
+    .not-received { padding:6px 10px; border-radius:20px; background:#fff3e0; color:#ef6c00; font-weight:700; display:inline-block; }
+    .muted { color:#666; font-size:0.95rem; }
+    @media (max-width:900px) { .search-input{width:180px;} }
+    @media (max-width:640px) { .controls{flex-direction:column;align-items:stretch;} .controls .left{justify-content:space-between;} .search-input{width:100%} }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="sidebar">
+      <h1>DTS Admin</h1>
+      <ul>
+        <li><a href="admin-dashboard.html">Dashboard</a></li>
+        <li><a href="user-management.html">User Management</a></li>
+        <li><a href="document-routing.html">Document Routing</a></li>
+        <li><a href="tracking-monitor.html">Tracking & Monitor</a></li>
+        <li><a href="reports-analytics.html">Reports & Analytics</a></li>
+        <li><a href="archives-records.html" class="active">Archives & Records</a></li>
+        <li><a href="security-backup.html">Security & Backup</a></li>
+      </ul>
+    </nav>
+
+    <main class="main-content">
+      <div class="top-bar">
+        <div class="top-left"><h1>Archives & Records</h1></div>
+        <div class="top-right">
+          <a href="admin-profile.html" class="user-info">
+            <span>Welcome, Admin</span>
+            <img src="images/profile.jpg" alt="Profile" class="profile-pic">
+          </a>
+        </div>
+      </div>
+
+      <section style="padding:18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;">
+          <div>
+          </div>
+
+          <div class="controls" aria-hidden="false">
+            <div class="left">
+              <select id="year-filter" class="select" aria-label="Filter by year">
+                <option value="all">All years</option>
+                <option value="2020">2020</option>
+                <option value="2021">2021</option>
+                <option value="2022">2022</option>
+                <option value="2023">2023</option>
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+              </select>
+
+              <select id="dept-filter" class="select" aria-label="Filter by department">
+                <option value="all">All departments</option>
+                <!-- departments may be filled by JS -->
+              </select>
+
+              <input id="archive-search" class="search-input" type="search" placeholder="Search by document title..." aria-label="Search archived documents by title">
+            </div>
+
+            <div class="right">
+              <button id="btn-refresh-archives" class="btn">Refresh</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-wrap" role="region" aria-labelledby="archives-table-heading">
+          <table class="archives-table" aria-describedby="archives-table-desc">
+            <caption id="archives-table-heading" style="text-align:left;padding:8px 0;font-weight:700;color:#4e342e;">Archived Documents</caption>
+            <thead>
+              <tr>
+                <th>Document ID</th>
+                <th>Title</th>
+                <th>Department</th>
+                <th>Archived Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="archives-tbody">
+              <!-- populated by JS -->
+            </tbody>
+          </table>
+          <p id="archives-table-desc" class="muted" style="padding:10px 0 0 12px;">Use filters to narrow results. Click Receive to mark as received.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    /*
+      Archives & Records - backend-ready
+
+      Endpoints (adjust to your API):
+        GET  /api/archives?year=2024&dept=Finance&q=term   -> returns array of archived documents
+           each item: { id, title, department, archivedAt (ISO string), received: boolean, fileUrl (optional) }
+        PUT  /api/archives/:id/receive                     -> marks as received
+        GET  /api/archives/:id/download                    -> downloads file (returns blob or redirects)
+        GET  /api/departments                              -> optional to populate department dropdown
+    */
+
+    (function(){
+      const api = {
+        list: '/api/archives',
+        receive: id => `/api/archives/${id}/receive`,
+        download: id => `/api/archives/${id}/download`,
+        depts: '/api/departments'
+      };
+
+      // sample fallback data
+      const sample = [
+        { id:'DOC-9001', title:'Employee Handbook 2021', department:'HR', archivedAt:'2021-06-12T10:30:00Z', received:false, fileUrl:'' },
+        { id:'DOC-9002', title:'Invoice 2020-045', department:'Finance', archivedAt:'2020-09-22T14:00:00Z', received:true, fileUrl:'' },
+        { id:'DOC-9003', title:'Research Paper - Q3', department:'Research', archivedAt:'2023-11-02T08:15:00Z', received:false, fileUrl:'' },
+        { id:'DOC-9004', title:'Safety Guidelines', department:'IT', archivedAt:'2024-01-19T12:00:00Z', received:true, fileUrl:'' }
+      ];
+
+      const sampleDepts = ['HR','Finance','Research','IT','Procurement','Management'];
+
+      // DOM refs
+      const yearFilter = document.getElementById('year-filter');
+      const deptFilter = document.getElementById('dept-filter');
+      const searchInput = document.getElementById('archive-search');
+      const archivesTbody = document.getElementById('archives-tbody');
+      const btnRefresh = document.getElementById('btn-refresh-archives');
+
+      let archivesCache = [];
+
+      function escapeHtml(s){ if (s===undefined||s===null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+      // populate department dropdown (prefer backend)
+      async function loadDepartments(){
+        try {
+          const res = await fetch(api.depts, { method:'GET', credentials:'same-origin' });
+          if (!res.ok) throw new Error('Depts fetch not ok');
+          const data = await res.json();
+          if (Array.isArray(data) && data.length){
+            populateDepartments(data);
+            return;
+          }
+        } catch (err) {
+          console.warn('Failed to fetch departments — using sample', err);
+        }
+        populateDepartments(sampleDepts);
+      }
+      function populateDepartments(list){
+        deptFilter.innerHTML = '<option value="all">All departments</option>';
+        list.forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d;
+          opt.textContent = d;
+          deptFilter.appendChild(opt);
+        });
+      }
+
+      // load archives (backend-ready)
+      async function loadArchives(){
+        const year = yearFilter.value;
+        const dept = deptFilter.value;
+        const q = (searchInput.value || '').trim();
+        const params = new URLSearchParams();
+        if (year && year !== 'all') params.set('year', year);
+        if (dept && dept !== 'all') params.set('dept', dept);
+        if (q) params.set('q', q);
+        const url = params.toString() ? `${api.list}?${params.toString()}` : api.list;
+
+        try {
+          const res = await fetch(url, { method:'GET', credentials:'same-origin' });
+          if (!res.ok) throw new Error('Archives fetch failed');
+          const data = await res.json();
+          archivesCache = Array.isArray(data) ? data : [];
+        } catch (err) {
+          console.warn('Failed to fetch archives — using sample data', err);
+          archivesCache = sample.slice();
+        }
+        renderArchives(archivesCache);
+      }
+
+      function renderArchives(list){
+        archivesTbody.innerHTML = '';
+        if (!list || list.length === 0){
+          archivesTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:18px;color:#666;">No archived documents found.</td></tr>';
+          return;
+        }
+        const frag = document.createDocumentFragment();
+        list.forEach(item => {
+          const tr = document.createElement('tr');
+
+          const tdId = document.createElement('td'); tdId.innerHTML = `<strong>${escapeHtml(item.id)}</strong>`;
+          const tdTitle = document.createElement('td'); tdTitle.textContent = item.title || '';
+          const tdDept = document.createElement('td'); tdDept.textContent = item.department || '';
+          const tdDate = document.createElement('td'); 
+          const d = item.archivedAt ? new Date(item.archivedAt) : null;
+          tdDate.textContent = d ? d.toLocaleString() : '';
+
+          const tdActions = document.createElement('td');
+
+          // Received / Not received badge and toggle
+          const receivedBtn = document.createElement('button');
+          receivedBtn.className = 'action-btn action-receive';
+          receivedBtn.textContent = item.received ? 'Received' : 'Mark Received';
+          receivedBtn.style.background = item.received ? '#6d4c41' : '#4caf50';
+          receivedBtn.addEventListener('click', () => toggleReceived(item));
+
+          // Download button
+          const downloadBtn = document.createElement('button');
+          downloadBtn.className = 'action-btn action-download';
+          downloadBtn.textContent = 'Download';
+          downloadBtn.addEventListener('click', () => downloadArchive(item));
+
+          tdActions.appendChild(receivedBtn);
+          tdActions.appendChild(downloadBtn);
+
+          tr.appendChild(tdId);
+          tr.appendChild(tdTitle);
+          tr.appendChild(tdDept);
+          tr.appendChild(tdDate);
+          tr.appendChild(tdActions);
+
+          frag.appendChild(tr);
+        });
+        archivesTbody.appendChild(frag);
+      }
+
+      // toggle received (optimistic update)
+      async function toggleReceived(item){
+        const id = item.id;
+        const newState = !item.received;
+        // optimistic update
+        archivesCache = archivesCache.map(a => a.id === id ? { ...a, received: newState } : a);
+        renderArchives(archivesCache);
+
+        try {
+          const res = await fetch(api.receive(id), { method:'PUT', credentials:'same-origin' });
+          if (!res.ok) throw new Error('Receive update failed');
+          // optionally read response
+        } catch (err) {
+          console.warn('Receive API failed — reverting locally and logging', err);
+          // revert
+          archivesCache = archivesCache.map(a => a.id === id ? { ...a, received: !newState } : a);
+          renderArchives(archivesCache);
+          alert('Failed to update status on server. Please try again.');
+        }
+      }
+
+      // download archive (server or client fallback)
+      async function downloadArchive(item){
+        const id = item.id;
+        // prefer server endpoint that returns file directly
+        try {
+          const res = await fetch(api.download(id), { method:'GET', credentials:'same-origin' });
+          if (!res.ok) throw new Error('Download failed');
+          const ct = res.headers.get('Content-Type') || '';
+          if (ct.includes('application/pdf') || ct.includes('application/')) {
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            // attempt filename from headers or fallback
+            const cd = res.headers.get('Content-Disposition') || '';
+            let filename = `${id}.pdf`;
+            const m = cd.match(/filename="?([^"]+)"?/);
+            if (m) filename = m[1];
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+            return;
+          }
+          // fallback if server returns JSON with fileUrl
+          const json = await res.json().catch(()=>null);
+          if (json && json.fileUrl) { window.location.assign(json.fileUrl); return; }
+        } catch (err) {
+          console.warn('Server download failed — using client fallback', err);
+        }
+
+        // client fallback: create small text file with details (for demo)
+        const text = `Document ID: ${item.id}\nTitle: ${item.title}\nDepartment: ${item.department}\nArchived: ${item.archivedAt || ''}`;
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${item.id}_info.txt`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      // filters
+      yearFilter.addEventListener('change', loadArchives);
+      deptFilter.addEventListener('change', loadArchives);
+      searchInput.addEventListener('input', () => {
+        // optional debounce
+        clearTimeout(window._archives_search_t);
+        window._archives_search_t = setTimeout(loadArchives, 350);
+      });
+      btnRefresh.addEventListener('click', loadArchives);
+
+      // initial load
+      loadDepartments();
+      loadArchives();
+
+      // expose for debug
+      window.archives = { reload: loadArchives, cache: () => archivesCache };
+    })();
+  </script>
+</body>
+</html>

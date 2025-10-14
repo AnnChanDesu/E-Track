@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Profile</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="container">
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <h1>DTS</h1>
+    <ul>
+      <li><a href="admin-dashboard.html">Dashboard</a></li>
+      <li><a href="admin-user-management.html">User Management</a></li>
+      <li><a href="admin-document-routing.html">Document Routing</a></li>
+      <li><a href="admin-tracking-monitor.html">Tracking & Monitor</a></li>
+      <li><a href="admin-reports-analytics.html">Reports & Analytics</a></li>
+      <li><a href="admin-archives-records.html">Archives & Records</a></li>
+      <li><a href="admin-security-backup.html">Security & Backup</a></li>
+      <li><a href="admin-profile.html" class="active">Profile</a></li>
+    </ul>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="top-bar">
+      <div class="top-left">
+        <h1>Profile Edit</h1>
+      </div>
+      <div class="top-right">
+        <a href="admin-profile.html" class="user-info active">
+          <span>Welcome, Admin</span>
+          <img src="images/profile.jpg" alt="Profile" class="profile-pic">
+        </a>
+      </div>
+    </div>
+
+    <section class="profile-section">
+      <div class="profile-container">
+        <div class="profile-top">
+          <img src="images/profile.jpg" alt="Profile Picture" class="profile-pic-large">
+          <h2 id="full-name">Administrator</h2>
+        </div>
+
+        <form class="profile-form">
+          <label for="firstName">First Name</label>
+          <input type="text" id="firstName" name="firstName" placeholder="Juan">
+
+          <label for="lastName">Last Name</label>
+          <input type="text" id="lastName" name="lastName" placeholder="Dela Cruz">
+
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" placeholder="admin@email.com">
+
+          <label for="phone">Phone Number</label>
+          <input type="text" id="phone" name="phone" placeholder="09123456789">
+
+          <label for="role">Role</label>
+          <select id="role" name="role">
+            <option value="">Select Role</option>
+            <option value="System Admin">System Admin</option>
+            <option value="Document Controller">Document Controller</option>
+            <option value="Supervisor">Supervisor</option>
+          </select>
+
+          <button type="submit" class="submit-btn">Update Profile</button>
+        </form>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="js/script.js"></script>
+</body>
+</html>

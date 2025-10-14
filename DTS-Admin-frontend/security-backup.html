@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Security & Backup</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* page-specific styles that won't break your main style.css */
+    .cards-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+      margin: 18px 0;
+    }
+    @media (max-width:900px) { .cards-row { grid-template-columns: 1fr; } }
+
+    .card {
+      background:#fff;
+      border-radius:12px;
+      padding:18px;
+      box-shadow:0 6px 18px rgba(0,0,0,0.06);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .card h3 { margin:0; color:#4e342e; font-size:1.05rem; }
+    .kpi {
+      display:flex;
+      gap:12px;
+      align-items:baseline;
+    }
+    .kpi .value { font-size:1.8rem; font-weight:700; color:#f06a27; }
+    .kpi .sub { color:#666; font-size:0.95rem; }
+
+    .small-note { color:#777; font-size:0.9rem; margin-top:6px; }
+
+    /* Backup & Restore area */
+    .backup-panel {
+      margin-top:12px;
+      display:flex;
+      gap:18px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+    }
+    .backup-controls {
+      flex:1;
+      min-width:320px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .control-row {
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .select {
+      padding:8px 12px;
+      border-radius:8px;
+      border:1px solid #ccc;
+      background:#fff;
+      font-weight:500;
+    }
+    .btn {
+      padding:8px 12px;
+      border-radius:8px;
+      border:none;
+      cursor:pointer;
+      font-weight:600;
+      background:#f06a27;
+      color:#fff;
+    }
+    .btn.secondary { background:#6d4c41; color:#fff; }
+    .btn.ghost { background:transparent; border:1px solid #ccc; color:#4e342e; }
+
+    .toggle {
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    .logs {
+      flex:1;
+      min-width:340px;
+      background:#fff;
+      border-radius:12px;
+      padding:12px;
+      box-shadow:0 6px 18px rgba(0,0,0,0.06);
+      max-height:360px;
+      overflow:auto;
+    }
+    .log-item { padding:8px 6px; border-bottom:1px solid #f0f0f0; font-size:0.95rem; color:#333; }
+    .muted { color:#666; font-size:0.95rem; }
+
+    /* small form */
+    .inline-file {
+      display:inline-block;
+      position:relative;
+    }
+    .inline-file input[type="file"] {
+      display:none;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="sidebar">
+      <h1>DTS Admin</h1>
+      <ul>
+        <li><a href="admin-dashboard.html">Dashboard</a></li>
+        <li><a href="user-management.html">User Management</a></li>
+        <li><a href="document-routing.html">Document Routing</a></li>
+        <li><a href="tracking-monitor.html">Tracking & Monitor</a></li>
+        <li><a href="reports-analytics.html">Reports & Analytics</a></li>
+        <li><a href="archives-records.html">Archives & Records</a></li>
+        <li><a href="security-backup.html" class="active">Security & Backup</a></li>
+      </ul>
+    </nav>
+
+    <main class="main-content">
+      <div class="top-bar">
+        <div class="top-left"><h1>Security & Backup</h1></div>
+        <div class="top-right">
+          <a href="admin-profile.html" class="user-info">
+            <span>Welcome, Admin</span>
+            <img src="images/profile.jpg" alt="Profile" class="profile-pic">
+          </a>
+        </div>
+      </div>
+
+      <section style="padding:18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div>
+          </div>
+          <div>
+            <button id="btn-refresh" class="btn ghost">Refresh Status</button>
+          </div>
+        </div>
+
+        <!-- top cards -->
+        <div class="cards-row">
+          <div class="card" id="card-last-backup">
+            <h3>Last Backup</h3>
+            <div class="kpi">
+              <div>
+                <div class="value" id="last-backup-time">—</div>
+                <div class="sub" id="last-backup-size">Size: —</div>
+              </div>
+              <div style="margin-left:auto;text-align:right;">
+                <div class="muted">Auto backup</div>
+                <div id="auto-status" style="font-weight:700;color:#4e342e">—</div>
+              </div>
+            </div>
+            <div class="small-note" id="last-backup-note">No backups yet.</div>
+          </div>
+
+          <div class="card" id="card-security-alerts">
+            <h3>Security Alerts</h3>
+            <div id="alerts-count" class="kpi">
+              <div>
+                <div class="value" id="alerts-value">0</div>
+                <div class="sub">Open Alerts</div>
+              </div>
+              <div style="margin-left:auto;">
+                <button id="btn-view-alerts" class="btn ghost">View Alerts</button>
+              </div>
+            </div>
+
+            <div class="small-note">Recent security events (click view for details).</div>
+          </div>
+        </div>
+
+        <!-- Backup & Restore panel -->
+        <div class="card" style="display:block;">
+          <h3>Backup & Restore</h3>
+          <div class="backup-panel">
+            <div class="backup-controls">
+              <div class="control-row">
+                <label class="muted" for="backup-frequency">Auto backup frequency:</label>
+                <select id="backup-frequency" class="select" aria-label="Backup frequency">
+                  <option value="daily">Everyday</option>
+                  <option value="every3">Every 3 days</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="biweekly">Biweekly</option>
+                  <option value="monthly">Monthly</option>
+                </select>
+                <div class="toggle" title="Enable or disable automatic backups">
+                  <label class="muted">Auto Backup</label>
+                  <input id="auto-backup-toggle" type="checkbox" />
+                </div>
+              </div>
+
+              <div class="control-row">
+                <button id="btn-start-backup" class="btn">Start Backup Now</button>
+                <label class="inline-file btn secondary" title="Upload backup file to restore">
+                  Restore From File
+                  <input id="restore-file" type="file" accept=".zip,.bak,.tar,.gz,.sql" />
+                </label>
+                <button id="btn-restore" class="btn ghost">Restore (selected file)</button>
+              </div>
+
+              <div class="control-row">
+                <button id="btn-schedule-save" class="btn secondary">Save Schedule</button>
+                <button id="btn-view-backups" class="btn ghost">View Backups</button>
+              </div>
+
+              <div class="small-note">Saved schedules will be sent to the server. Restores are executed server-side; uploading large files may take time.</div>
+            </div>
+
+            <div class="logs" aria-live="polite">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <strong>Last events</strong>
+                <small class="muted" id="logs-updated">—</small>
+              </div>
+              <div id="logs-list">
+                <!-- log entries -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    /*
+      Security & Backup - backend-ready frontend
+
+      Expected endpoints (adjust names to match your backend):
+        GET    /api/backup/status           -> { lastBackup: ISO, sizeBytes, autoEnabled: bool, frequency: 'daily'|'weekly'..., alertsCount: number, events: [{when, message}] }
+        POST   /api/backup/start            -> triggers backup, returns { jobId, startedAt }
+        PUT    /api/backup/schedule         -> { frequency: 'daily', autoEnabled: true } (updates schedule)
+        POST   /api/backup/restore          -> uploads file (FormData: file) or { fileId } to restore from server stored backup
+        GET    /api/backup/list             -> returns list of available backup entries (optional for View Backups)
+        GET    /api/security/alerts         -> returns detailed alerts (optional)
+    */
+
+    (function(){
+      const api = {
+        status: '/api/backup/status',
+        start: '/api/backup/start',
+        schedule: '/api/backup/schedule',
+        restore: '/api/backup/restore',
+        list: '/api/backup/list',
+        alerts: '/api/security/alerts'
+      };
+
+      // fallback sample data
+      const sampleStatus = {
+        lastBackup: '2025-10-08T02:15:00Z',
+        sizeBytes: 524288000, // 500 MB
+        autoEnabled: true,
+        frequency: 'daily',
+        alertsCount: 2,
+        events: [
+          { when: '2025-10-08T02:15:00Z', message: 'Automatic backup completed (500MB).' },
+          { when: '2025-10-05T02:12:00Z', message: 'Manual backup started by Admin.' },
+          { when: '2025-10-01T11:00:00Z', message: 'Security alert: multiple failed logins.' }
+        ]
+      };
+
+      // DOM refs
+      const lastBackupTime = document.getElementById('last-backup-time');
+      const lastBackupSize = document.getElementById('last-backup-size');
+      const autoStatus = document.getElementById('auto-status');
+      const lastBackupNote = document.getElementById('last-backup-note');
+      const alertsValue = document.getElementById('alerts-value');
+      const btnViewAlerts = document.getElementById('btn-view-alerts');
+
+      const backupFreq = document.getElementById('backup-frequency');
+      const autoToggle = document.getElementById('auto-backup-toggle');
+      const btnStartBackup = document.getElementById('btn-start-backup');
+      const fileInput = document.getElementById('restore-file');
+      const btnRestore = document.getElementById('btn-restore');
+      const btnScheduleSave = document.getElementById('btn-schedule-save');
+      const btnViewBackups = document.getElementById('btn-view-backups');
+      const logsList = document.getElementById('logs-list');
+      const logsUpdated = document.getElementById('logs-updated');
+      const btnRefresh = document.getElementById('btn-refresh');
+
+      let currentStatus = null;
+      let uploadedRestoreFile = null;
+
+      function formatBytes(n){
+        if (!Number.isFinite(n)) return '—';
+        if (n < 1024) return `${n} B`;
+        if (n < 1024*1024) return `${(n/1024).toFixed(2)} KB`;
+        if (n < 1024*1024*1024) return `${(n/(1024*1024)).toFixed(2)} MB`;
+        return `${(n/(1024*1024*1024)).toFixed(2)} GB`;
+      }
+      function fmtLocal(iso){
+        try { return new Date(iso).toLocaleString(); } catch(e) { return iso || '—'; }
+      }
+      function setStatusUI(st){
+        currentStatus = st;
+        lastBackupTime.textContent = st.lastBackup ? fmtLocal(st.lastBackup) : '—';
+        lastBackupSize.textContent = `Size: ${formatBytes(st.sizeBytes ?? 0)}`;
+        autoStatus.textContent = st.autoEnabled ? `Enabled (${st.frequency})` : 'Disabled';
+        lastBackupNote.textContent = st.lastBackup ? `Last backup completed at ${fmtLocal(st.lastBackup)}.` : 'No backups yet.';
+        alertsValue.textContent = st.alertsCount ?? 0;
+        autoToggle.checked = !!st.autoEnabled;
+        // set frequency dropdown
+        if (st.frequency) {
+          const opt = Array.from(backupFreq.options).find(o => o.value === st.frequency);
+          if (opt) backupFreq.value = st.frequency;
+        }
+        renderLogs(st.events || []);
+      }
+      function renderLogs(events){
+        logsList.innerHTML = '';
+        if (!events || events.length === 0) {
+          logsList.innerHTML = '<div class="log-item muted">No recent events.</div>';
+          logsUpdated.textContent = `Updated: ${fmtLocal(new Date().toISOString())}`;
+          return;
+        }
+        events.forEach(ev => {
+          const div = document.createElement('div');
+          div.className = 'log-item';
+          div.innerHTML = `<div style="font-weight:600;color:#4e342e">${escapeHtml(ev.message)}</div><div class="muted">${fmtLocal(ev.when)}</div>`;
+          logsList.appendChild(div);
+        });
+        logsUpdated.textContent = `Updated: ${fmtLocal(new Date().toISOString())}`;
+      }
+      function escapeHtml(s){ if (s===undefined||s===null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+      // load status from backend
+      async function loadStatus(){
+        try {
+          const res = await fetch(api.status, { method:'GET', credentials:'same-origin' });
+          if (!res.ok) throw new Error('Status fetch failed');
+          const data = await res.json();
+          // expected shape: see sampleStatus
+          setStatusUI({
+            lastBackup: data.lastBackup,
+            sizeBytes: data.sizeBytes,
+            autoEnabled: data.autoEnabled,
+            frequency: data.frequency,
+            alertsCount: data.alertsCount,
+            events: data.events
+          });
+          return;
+        } catch (err) {
+          console.warn('Failed to fetch backup status — using sample', err);
+          setStatusUI(sampleStatus);
+        }
+      }
+
+      // start backup
+      async function startBackup(){
+        if (!confirm('Start backup now?')) return;
+        btnStartBackup.disabled = true;
+        btnStartBackup.textContent = 'Starting...';
+        try {
+          const res = await fetch(api.start, { method:'POST', credentials:'same-origin' });
+          if (!res.ok) throw new Error('Start backup failed');
+          const json = await res.json().catch(()=>null);
+          // optimistic: append event and update status
+          const ev = { when: new Date().toISOString(), message: json && json.message ? json.message : 'Backup started' };
+          const newEvents = [ev, ...(currentStatus && currentStatus.events ? currentStatus.events : [])].slice(0,20);
+          setStatusUI({ ...(currentStatus||{}), events: newEvents });
+          alert('Backup started. Monitor logs for progress.');
+        } catch (err) {
+          console.warn('Backup start failed — logged and sample fallback', err);
+          const ev = { when: new Date().toISOString(), message: 'Backup started (client simulated)' };
+          const newEvents = [ev, ...(currentStatus && currentStatus.events ? currentStatus.events : [])].slice(0,20);
+          setStatusUI({ ...(currentStatus||{}), events: newEvents });
+          alert('Backup requested (if backend unavailable, this is simulated).');
+        } finally {
+          btnStartBackup.disabled = false;
+          btnStartBackup.textContent = 'Start Backup Now';
+        }
+      }
+
+      // schedule save
+      async function saveSchedule(){
+        const frequency = backupFreq.value;
+        const autoEnabled = !!autoToggle.checked;
+        btnScheduleSave.disabled = true;
+        btnScheduleSave.textContent = 'Saving...';
+        try {
+          const res = await fetch(api.schedule, {
+            method: 'PUT',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ frequency, autoEnabled })
+          });
+          if (!res.ok) throw new Error('Schedule save failed');
+          alert('Schedule saved.');
+          // update UI optimistically
+          setStatusUI({ ...(currentStatus||{}), frequency, autoEnabled });
+        } catch (err) {
+          console.warn('Save schedule failed — applying optimistic update', err);
+          setStatusUI({ ...(currentStatus||{}), frequency, autoEnabled });
+          alert('Schedule change applied locally (backend may be unreachable).');
+        } finally {
+          btnScheduleSave.disabled = false;
+          btnScheduleSave.textContent = 'Save Schedule';
+        }
+      }
+
+      // restore (uploads file if provided)
+      async function restoreFromFile(){
+        const f = uploadedRestoreFile;
+        if (!f) {
+          alert('Please choose a backup file to restore first (Restore From File).');
+          return;
+        }
+        if (!confirm(`Upload ${f.name} and start restore? This will run server-side.`)) return;
+        btnRestore.disabled = true;
+        btnRestore.textContent = 'Restoring...';
+
+        const fd = new FormData();
+        fd.append('file', f);
+
+        try {
+          const res = await fetch(api.restore, { method:'POST', credentials:'same-origin', body: fd });
+          if (!res.ok) throw new Error('Restore failed');
+          const json = await res.json().catch(()=>null);
+          alert('Restore requested. Server will perform restore and notify when complete.');
+          // optimistic event
+          const ev = { when: new Date().toISOString(), message: `Restore requested from ${f.name}` };
+          const newEvents = [ev, ...(currentStatus && currentStatus.events ? currentStatus.events : [])].slice(0,20);
+          setStatusUI({ ...(currentStatus||{}), events: newEvents });
+        } catch (err) {
+          console.warn('Restore failed or backend unreachable', err);
+          const ev = { when: new Date().toISOString(), message: `Restore requested (client simulated) from ${f.name}` };
+          const newEvents = [ev, ...(currentStatus && currentStatus.events ? currentStatus.events : [])].slice(0,20);
+          setStatusUI({ ...(currentStatus||{}), events: newEvents });
+          alert('Restore simulated locally (backend may be unavailable).');
+        } finally {
+          btnRestore.disabled = false;
+          btnRestore.textContent = 'Restore (selected file)';
+          // clear uploaded file
+          uploadedRestoreFile = null;
+          fileInput.value = '';
+        }
+      }
+
+      // View backups list (simple fetch)
+      async function viewBackups(){
+        try {
+          const res = await fetch(api.list, { method:'GET', credentials:'same-origin' });
+          if (!res.ok) throw new Error('List fetch failed');
+          const data = await res.json();
+          const names = Array.isArray(data) && data.length ? data.map(b => `${b.id} — ${b.createdAt || ''}`) : ['No backups found'];
+          alert('Backups:\n\n' + names.join('\n'));
+        } catch (err) {
+          console.warn('View backups failed — fallback sample', err);
+          alert('Backups (sample):\n\nBackup-2025-10-08.zip\nBackup-2025-10-05.zip');
+        }
+      }
+
+      // view alerts (open separate endpoint or show details)
+      async function viewAlerts(){
+        try {
+          const res = await fetch(api.alerts, { method:'GET', credentials:'same-origin' });
+          if (!res.ok) throw new Error('Alerts fetch failed');
+          const data = await res.json();
+          if (!Array.isArray(data) || data.length === 0) { alert('No alerts.'); return; }
+          const out = data.map(a => `${a.severity || 'Info'} - ${a.message} (${a.when || ''})`).join('\n\n');
+          alert('Security Alerts:\n\n' + out);
+        } catch (err) {
+          console.warn('Failed fetching alerts — fallback', err);
+          alert('Security Alerts (sample):\n\nHigh - Multiple failed login attempts (2025-10-01 10:12)\nMedium - Old TLS certificate expiring soon (2025-09-29)');
+        }
+      }
+
+      // file input change
+      fileInput.addEventListener('change', (e) => {
+        const f = e.target.files && e.target.files[0];
+        if (f) {
+          uploadedRestoreFile = f;
+          alert(`Selected file: ${f.name} (${formatBytes(f.size)})`);
+        } else {
+          uploadedRestoreFile = null;
+        }
+      });
+
+      // attach handlers
+      btnStartBackup.addEventListener('click', startBackup);
+      btnScheduleSave.addEventListener('click', saveSchedule);
+      btnRestore.addEventListener('click', restoreFromFile);
+      btnViewBackups.addEventListener('click', viewBackups);
+      btnViewAlerts.addEventListener('click', viewAlerts);
+      btnRefresh.addEventListener('click', loadStatus);
+
+      // initial load
+      loadStatus();
+
+      // expose for debug
+      window.securityBackup = { reload: loadStatus };
+    })();
+  </script>
+</body>
+</html>

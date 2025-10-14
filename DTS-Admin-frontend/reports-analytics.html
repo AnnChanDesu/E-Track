@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Reports & Analytics</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* Page-specific styles (keeps using your style.css) */
+    .controls {
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:14px;
+      flex-wrap:wrap;
+    }
+    .controls .left { display:flex; gap:10px; align-items:center; }
+    .controls .right { display:flex; gap:10px; align-items:center; }
+    .btn { padding:8px 12px; border-radius:8px; border:none; cursor:pointer; font-weight:600; background:#f06a27; color:#fff; }
+    .btn.ghost { background:transparent; border:1px solid #ccc; color:#4e342e; }
+    .btn.secondary { background:#6d4c41; }
+    .cards-grid {
+      display:grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap:18px;
+      margin-top:12px;
+    }
+    @media (max-width:900px) { .cards-grid { grid-template-columns: 1fr; } }
+    .card {
+      background:#fff;
+      border-radius:12px;
+      padding:18px;
+      box-shadow:0 6px 18px rgba(0,0,0,0.06);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      min-height:150px;
+      box-sizing:border-box;
+    }
+    .card h3 { margin:0; color:#4e342e; font-size:1.05rem; }
+    .kpi {
+      display:flex;
+      align-items:baseline;
+      gap:12px;
+    }
+    .kpi .value { font-size:2rem; font-weight:700; color:#f06a27; }
+    .kpi .sub { color:#666; font-size:0.95rem; }
+    .mini-chart { width:100%; height:80px; }
+    .dept-list { display:flex; gap:10px; flex-direction:column; }
+    .dept-item { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+    .dept-bar { height:10px; background:#e9e9e9; border-radius:6px; flex:1; overflow:hidden; margin-left:10px; }
+    .dept-bar > i { display:block; height:100%; background:#f06a27; }
+    .small-note { color:#777; font-size:0.9rem; margin-top:6px; }
+    /* modal */
+    .modal { display:none; position:fixed; inset:0; z-index:2500; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; }
+    .modal.show { display:flex; }
+    .modal-content { width:520px; max-width:95%; background:#fff; padding:18px; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,0.2); }
+    .modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:12px; }
+    .form-row { margin-top:8px; display:flex; gap:8px; align-items:center; }
+    .form-row select, .form-row input { padding:8px 10px; border-radius:8px; border:1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="sidebar">
+      <h1>DTS Admin</h1>
+      <ul>
+        <li><a href="admin-dashboard.html">Dashboard</a></li>
+        <li><a href="user-management.html">User Management</a></li>
+        <li><a href="document-routing.html">Document Routing</a></li>
+        <li><a href="tracking-monitor.html">Tracking & Monitor</a></li>
+        <li><a href="reports-analytics.html" class="active">Reports & Analytics</a></li>
+        <li><a href="archives-records.html">Archives & Records</a></li>
+        <li><a href="security-backup.html">Security & Backup</a></li>
+      </ul>
+    </nav>
+
+    <main class="main-content">
+      <div class="top-bar">
+        <div class="top-left"><h1>Reports & Analytics</h1></div>
+        <div class="top-right">
+          <a href="admin-profile.html" class="user-info">
+            <span>Welcome, Admin</span>
+            <img src="images/profile.jpg" alt="Profile" class="profile-pic">
+          </a>
+        </div>
+      </div>
+
+      <section style="padding:18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;">
+          <div>
+          </div>
+
+          <div class="controls">
+            <div class="left">
+              <!-- optionally add filters later -->
+            </div>
+            <div class="right">
+              <button id="btn-generate" class="btn ghost">Generate Report</button>
+              <button id="btn-export-pdf" class="btn">Export PDF</button>
+              <button id="btn-export-excel" class="btn secondary">Export Excel</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="cards-grid">
+          <!-- 1) Pending vs Completed -->
+          <div class="card" id="card-pending-completed">
+            <h3>Pending vs Completed</h3>
+            <div class="kpi">
+              <div>
+                <div class="value" id="kpi-pending">—</div>
+                <div class="sub">Pending</div>
+              </div>
+              <div>
+                <div class="value" id="kpi-completed">—</div>
+                <div class="sub">Completed</div>
+              </div>
+            </div>
+            <canvas id="chart-pending" class="mini-chart" aria-hidden="true"></canvas>
+            <div class="small-note">Snapshot of pending and completed documents.</div>
+          </div>
+
+          <!-- 2) Department performance -->
+          <div class="card" id="card-department">
+            <h3>Department Performance</h3>
+            <div class="dept-list" id="dept-list">
+              <!-- filled by JS -->
+            </div>
+            <div class="small-note">Higher bars indicate more completed items.</div>
+          </div>
+
+          <!-- 3) Monthly trend -->
+          <div class="card" id="card-monthly">
+            <h3>Monthly Trend</h3>
+            <canvas id="chart-monthly" class="mini-chart" aria-hidden="true"></canvas>
+            <div class="small-note">Documents processed per month (last 12 months).</div>
+          </div>
+
+          <!-- 4) User activity -->
+          <div class="card" id="card-user-activity">
+            <h3>User Activity</h3>
+            <div id="user-activity-list">
+              <!-- filled by JS -->
+            </div>
+            <div class="small-note">Top users by processed documents.</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Generate report modal -->
+  <div id="gen-modal" class="modal" aria-hidden="true" role="dialog">
+    <div class="modal-content">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h3>Generate Report</h3>
+        <button id="gen-close" class="modal-close" style="border:none;background:transparent;font-size:20px;cursor:pointer">&times;</button>
+      </div>
+
+      <div style="margin-top:8px;">
+        <label>Report Type</label>
+        <div class="form-row">
+          <select id="gen-type">
+            <option value="summary">Summary (KPIs)</option>
+            <option value="detailed">Detailed (All Entries)</option>
+            <option value="department">Department Report</option>
+          </select>
+          <select id="gen-range">
+            <option value="30">Last 30 days</option>
+            <option value="90">Last 90 days</option>
+            <option value="365">Last 12 months</option>
+          </select>
+        </div>
+        <div class="form-row" style="margin-top:12px;">
+          <label style="margin-right:8px;">Include:</label>
+          <label><input type="checkbox" id="inc-logs" checked> Activity logs</label>
+          <label style="margin-left:6px;"><input type="checkbox" id="inc-users"> User activity</label>
+        </div>
+
+        <div class="modal-actions">
+          <button id="gen-cancel" class="btn ghost">Cancel</button>
+          <button id="gen-submit" class="btn">Generate</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /*
+      Reports & Analytics - backend-ready
+      Endpoints used (adjust to your API):
+        GET  /api/reports/overview            -> { pending, completed, deptPerformance: [{dept, completed}], monthlyTrend: [{month, value}], topUsers: [{user, count}] }
+        POST /api/reports/generate            -> { success:true, jobId } (long-running)
+        GET  /api/reports/export?format=pdf   -> returns file or { fileUrl }
+        GET  /api/reports/export?format=excel -> returns file or { fileUrl }
+    */
+
+    (function(){
+      const api = {
+        overview: '/api/reports/overview',
+        generate: '/api/reports/generate',
+        export: format => `/api/reports/export?format=${format}`
+      };
+
+      // Sample fallback data
+      const sample = {
+        pending: 42,
+        completed: 512,
+        deptPerformance: [
+          { dept: 'IT', completed: 180 },
+          { dept: 'Finance', completed: 120 },
+          { dept: 'Research', completed: 95 },
+          { dept: 'HR', completed: 60 }
+        ],
+        monthlyTrend: [12,30,45,60,72,50,88,95,110,120,130,140], // last 12 months
+        months: ['Nov','Dec','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct'], // labels sample
+        topUsers: [
+          { user: 'Alice Santos', count: 120 },
+          { user: 'Mark Tan', count: 90 },
+          { user: 'Dr. Reyes', count: 80 }
+        ]
+      };
+
+      // DOM
+      const kpiPending = document.getElementById('kpi-pending');
+      const kpiCompleted = document.getElementById('kpi-completed');
+      const deptList = document.getElementById('dept-list');
+      const userActivityList = document.getElementById('user-activity-list');
+
+      const chartPending = document.getElementById('chart-pending');
+      const chartMonthly = document.getElementById('chart-monthly');
+
+      // modal refs
+      const genModal = document.getElementById('gen-modal');
+      const btnGenerate = document.getElementById('btn-generate');
+      const btnExportPdf = document.getElementById('btn-export-pdf');
+      const btnExportExcel = document.getElementById('btn-export-excel');
+      const genClose = document.getElementById('gen-close');
+      const genCancel = document.getElementById('gen-cancel');
+      const genSubmit = document.getElementById('gen-submit');
+
+      // helpers
+      function setKpis(data){
+        kpiPending.textContent = Number.isFinite(data.pending) ? data.pending : '—';
+        kpiCompleted.textContent = Number.isFinite(data.completed) ? data.completed : '—';
+      }
+
+      function renderDeptPerformance(list){
+        deptList.innerHTML = '';
+        const max = Math.max(...list.map(l => l.completed), 1);
+        list.forEach(l => {
+          const div = document.createElement('div');
+          div.className = 'dept-item';
+          div.innerHTML = `<strong style="min-width:120px">${escapeHtml(l.dept)}</strong><div style="display:flex;align-items:center;gap:8px"><div class="dept-bar"><i style="width:${Math.round((l.completed/max)*100)}%"></i></div><div style="width:54px;text-align:right;color:#333;font-weight:600">${l.completed}</div></div>`;
+          deptList.appendChild(div);
+        });
+      }
+
+      function renderTopUsers(list){
+        userActivityList.innerHTML = '';
+        list.forEach(u => {
+          const row = document.createElement('div');
+          row.style.display = 'flex';
+          row.style.justifyContent = 'space-between';
+          row.style.alignItems = 'center';
+          row.style.padding = '6px 0';
+          row.innerHTML = `<div style="font-weight:600">${escapeHtml(u.user)}</div><div style="color:#4e342e;font-weight:700">${u.count}</div>`;
+          userActivityList.appendChild(row);
+        });
+      }
+
+      function drawPie(canvas, a, b){
+        // draws a simple two-slice donut showing pending vs completed
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const w = canvas.clientWidth * devicePixelRatio;
+        const h = canvas.clientHeight * devicePixelRatio;
+        canvas.width = w; canvas.height = h;
+        const cx = w/2, cy = h/2, r = Math.min(w,h)/3;
+        ctx.clearRect(0,0,w,h);
+        const total = (a||0) + (b||0) || 1;
+        const aAngle = (a/total) * Math.PI * 2;
+        // slice pending (orange)
+        ctx.beginPath();
+        ctx.moveTo(cx,cy);
+        ctx.fillStyle = '#f06a27';
+        ctx.arc(cx,cy,r,-Math.PI/2, -Math.PI/2 + aAngle);
+        ctx.closePath();
+        ctx.fill();
+        // slice completed (green)
+        ctx.beginPath();
+        ctx.moveTo(cx,cy);
+        ctx.fillStyle = '#4caf50';
+        ctx.arc(cx,cy,r,-Math.PI/2 + aAngle, -Math.PI/2 + Math.PI*2);
+        ctx.closePath();
+        ctx.fill();
+        // inner circle (donut)
+        ctx.beginPath();
+        ctx.fillStyle = '#fff';
+        ctx.arc(cx,cy,r*0.6,0,Math.PI*2);
+        ctx.fill();
+      }
+
+      function drawBarChart(canvas, labels, values){
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const w = canvas.clientWidth * devicePixelRatio;
+        const h = canvas.clientHeight * devicePixelRatio;
+        canvas.width = w; canvas.height = h;
+        ctx.clearRect(0,0,w,h);
+        const padding = 12 * devicePixelRatio;
+        const maxVal = Math.max(...values, 1);
+        const barW = (w - padding*2) / values.length * 0.7;
+        values.forEach((v,i) => {
+          const x = padding + i * ((w - padding*2) / values.length) + ((w - padding*2) / values.length - barW)/2;
+          const barH = ( (v / maxVal) * (h - padding*2) );
+          ctx.fillStyle = '#f06a27';
+          ctx.fillRect(x, h - padding - barH, barW, barH);
+        });
+      }
+
+      function escapeHtml(s){ if (s===undefined||s===null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+      // fetch overview
+      async function loadOverview(){
+        try {
+          const res = await fetch(api.overview, { method:'GET', credentials:'same-origin' });
+          if (!res.ok) throw new Error('Network response not ok');
+          const data = await res.json();
+          // expected shape: { pending, completed, deptPerformance: [{dept,completed}], monthlyTrend: { months:[], values:[] }, topUsers: [{user,count}] }
+          const pending = data.pending ?? sample.pending;
+          const completed = data.completed ?? sample.completed;
+          setKpis({ pending, completed });
+
+          const dept = data.deptPerformance ?? sample.deptPerformance;
+          renderDeptPerformance(dept);
+
+          const monthly = (data.monthlyTrend && data.monthlyTrend.values) ? data.monthlyTrend.values : sample.monthlyTrend;
+          const months = (data.monthlyTrend && data.monthlyTrend.months) ? data.monthlyTrend.months : sample.months;
+          drawBarChart(chartMonthly, months, monthly);
+
+          const topUsers = data.topUsers ?? sample.topUsers;
+          renderTopUsers(topUsers);
+
+          drawPie(chartPending, pending, completed);
+        } catch (err) {
+          console.warn('Failed to load overview — using sample data', err);
+          setKpis(sample);
+          renderDeptPerformance(sample.deptPerformance);
+          renderTopUsers(sample.topUsers);
+          drawBarChart(chartMonthly, sample.months, sample.monthlyTrend);
+          drawPie(chartPending, sample.pending, sample.completed);
+        }
+      }
+
+      // generate report
+      async function generateReport(){ 
+        const type = document.getElementById('gen-type').value;
+        const range = document.getElementById('gen-range').value;
+        const includeLogs = document.getElementById('inc-logs').checked;
+        const includeUsers = document.getElementById('inc-users').checked;
+
+        try {
+          genSubmit.disabled = true;
+          genSubmit.textContent = 'Generating...';
+          const res = await fetch(api.generate, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type, range, includeLogs, includeUsers })
+          });
+          if (!res.ok) throw new Error('Generate failed');
+          const json = await res.json().catch(() => null);
+          alert('Report generation requested. If this is a long job, check the reports queue in a moment.');
+          hideGenModal();
+        } catch (err) {
+          console.warn('Report generation failed', err);
+          alert('Report generation failed (see console).');
+          hideGenModal();
+        } finally {
+          genSubmit.disabled = false;
+          genSubmit.textContent = 'Generate';
+        }
+      }
+
+      // export (PDF / Excel)
+      async function exportReport(format){
+        try {
+          // try direct server export endpoint
+          const res = await fetch(api.export(format), { method:'GET', credentials:'same-origin' });
+          if (!res.ok) throw new Error('Export failed');
+          // If server returns file blob
+          const ct = res.headers.get('Content-Type') || '';
+          if (ct.includes('application/pdf') || ct.includes('application/vnd.ms-excel') || ct.includes('application/vnd.openxmlformats')) {
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `report_export_${Date.now()}.${format === 'pdf' ? 'pdf' : 'xlsx'}`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+            return;
+          }
+          // If server returns JSON with fileUrl:
+          const json = await res.json().catch(() => null);
+          if (json && json.fileUrl) {
+            window.location.assign(json.fileUrl);
+            return;
+          }
+          alert('Export requested. If the server processed this, check the reports area for the file.');
+        } catch (err) {
+          console.warn('Export failed or backend missing — fallback: download simple CSV summary', err);
+          // Fallback: create CSV summary of dept performance
+          const rows = [['Department','Completed']];
+          const data = sample.deptPerformance;
+          data.forEach(d => rows.push([d.dept, d.completed]));
+          const csv = rows.map(r => r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+          const blob = new Blob([csv], { type: 'text/csv' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `report_summary_${Date.now()}.csv`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+        }
+      }
+
+      // modal helpers
+      function showGenModal(){ genModal.classList.add('show'); genModal.setAttribute('aria-hidden','false'); }
+      function hideGenModal(){ genModal.classList.remove('show'); genModal.setAttribute('aria-hidden','true'); }
+
+      // events
+      btnGenerate.addEventListener('click', showGenModal);
+      genClose.addEventListener('click', hideGenModal);
+      genCancel.addEventListener('click', hideGenModal);
+      genSubmit.addEventListener('click', generateReport);
+      btnExportPdf.addEventListener('click', () => exportReport('pdf'));
+      btnExportExcel.addEventListener('click', () => exportReport('excel'));
+
+      // initial load
+      loadOverview();
+
+      // expose for debugging
+      window.reports = { reload: loadOverview };
+    })();
+  </script>
+</body>
+</html>

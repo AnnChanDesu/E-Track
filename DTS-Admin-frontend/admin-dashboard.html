@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/style.css"/>
+  <style>
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="sidebar">
+      <h1>DTS Admin</h1>
+      <ul>
+        <li><a href="admin-dashboard.html" class="active">Dashboard</a></li>
+        <li><a href="user-management.html">User Management</a></li>
+        <li><a href="document-routing.html">Document Routing</a></li>
+        <li><a href="tracking-monitor.html">Tracking & Monitor</a></li>
+        <li><a href="reports-analytics.html">Reports & Analytics</a></li>
+        <li><a href="archives-records.html">Archives & Records</a></li>
+        <li><a href="security-backup.html">Security & Backup</a></li>
+      </ul>
+    </nav>
+
+    <main class="main-content">
+      <div class="top-bar">
+        <div class="top-left">
+          <h1>Dashboard</h1>
+        </div>
+        <div class="top-right">
+          <a href="admin-profile.html" class="user-info">
+            <span>Welcome, Admin</span>
+            <img src="images/profile.jpg" alt="Profile" class="profile-pic">
+          </a>
+        </div>
+      </div>
+
+      <section class="dashboard-stats">
+        <div class="stats-header">
+          <div>
+          </div>
+          <div>
+            <button id="stats-refresh" type="button">Refresh</button>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-title">Total Documents</div>
+            <div id="stat-totalDocuments" class="stat-value">—</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-title">Active Documents</div>
+            <div id="stat-activeDocuments" class="stat-value">—</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-title">Pending Approval</div>
+            <div id="stat-pendingApproval" class="stat-value">—</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-title">Overdue Documents</div>
+            <div id="stat-overdueDocuments" class="stat-value">—</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-title">Avg. Processing Time (days)</div>
+            <div id="stat-avgProcessingTime" class="stat-value">—</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-title">Archived This Month</div>
+            <div id="stat-archivedThisMonth" class="stat-value">—</div>
+          </div>
+        </div>
+
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // Expected endpoint: GET /api/admin/stats PANG BACKEND SIKAYON MAKA AMMO
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const endpoints = {
+        stats: '/api/admin/stats'
+      };
+
+      const ids = {
+        totalDocuments: 'stat-totalDocuments',
+        activeDocuments: 'stat-activeDocuments',
+        pendingApproval: 'stat-pendingApproval',
+        overdueDocuments: 'stat-overdueDocuments',
+        avgProcessingTime: 'stat-avgProcessingTime',
+        archivedThisMonth: 'stat-archivedThisMonth'
+      };
+
+      const formatNumber = (v) => {
+        if (v === null || v === undefined) return '—';
+        if (typeof v === 'number' && !Number.isInteger(v)) return v.toFixed(2);
+        return String(v);
+      };
+
+      async function loadStats() {
+        setLoadingState(true);
+        try {
+          const res = await fetch(endpoints.stats, { method: 'GET', credentials: 'same-origin' });
+          if (!res.ok) throw new Error('Network response was not ok');
+          const data = await res.json();
+          document.getElementById(ids.totalDocuments).textContent = formatNumber(data.totalDocuments ?? 0);
+          document.getElementById(ids.activeDocuments).textContent = formatNumber(data.activeDocuments ?? 0);
+          document.getElementById(ids.pendingApproval).textContent = formatNumber(data.pendingApproval ?? 0);
+          document.getElementById(ids.overdueDocuments).textContent = formatNumber(data.overdueDocuments ?? 0);
+          document.getElementById(ids.avgProcessingTime).textContent = formatNumber(data.avgProcessingTime ?? '—');
+          document.getElementById(ids.archivedThisMonth).textContent = formatNumber(data.archivedThisMonth ?? 0);
+        } catch (err) {
+          console.warn('Failed to fetch stats, using fallback sample data:', err);
+          const sample = {
+            totalDocuments: 512,
+            activeDocuments: 230,
+            pendingApproval: 42,
+            overdueDocuments: 6,
+            avgProcessingTime: 2.8,
+            archivedThisMonth: 18
+          };
+          document.getElementById(ids.totalDocuments).textContent = formatNumber(sample.totalDocuments);
+          document.getElementById(ids.activeDocuments).textContent = formatNumber(sample.activeDocuments);
+          document.getElementById(ids.pendingApproval).textContent = formatNumber(sample.pendingApproval);
+          document.getElementById(ids.overdueDocuments).textContent = formatNumber(sample.overdueDocuments);
+          document.getElementById(ids.avgProcessingTime).textContent = formatNumber(sample.avgProcessingTime);
+          document.getElementById(ids.archivedThisMonth).textContent = formatNumber(sample.archivedThisMonth);
+        } finally {
+          setLoadingState(false);
+        }
+      }
+
+      function setLoadingState(isLoading) {
+        Object.values(ids).forEach(id => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          el.style.opacity = isLoading ? '0.6' : '1';
+          if (isLoading) el.textContent = '...';
+        });
+      }
+
+      document.getElementById('stats-refresh').addEventListener('click', loadStats);
+
+      // initial load
+      loadStats();
+    });
+  </script>
+</body>
+</html>
