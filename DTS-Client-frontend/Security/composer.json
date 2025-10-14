@@ -1,0 +1,15 @@
+{
+  "name": "dts/auth-dashboard",
+  "description": "Document Tracking System - Auth with OTP",
+  "type": "project",
+  "require": {
+    "phpmailer/phpmailer": "^6.9"
+  },
+  "autoload": {
+    "psr-4": {
+      "DTS\\": "src/"
+    }
+  }
+}
+
+
