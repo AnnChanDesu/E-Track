@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="container">
+  <nav class="sidebar">
+    <h1>DTS</h1>
+    <ul>
+      <li><a href="index.html">Dashboard</a></li>
+      <li><a href="upload.html">Upload Documents</a></li>
+      <li><a href="my-documents.html">My Documents</a></li>
+    </ul>
+  </nav>
+
+  <main class="main-content">
+    <div class="top-bar">
+      <div class="top-left">
+        <h1>Profile Edit</h1>
+      </div>
+      <div class="top-right">
+        <div class="nav-link dropdown">🔔 Notifications
+          <ul id="notif-list" class="notifications-dropdown"></ul>
+        </div>
+        <a href="profile.html" class="user-info active">
+          <span>Welcome, User</span>
+          <img src="images/profile.jpg" alt="Profile" class="profile-pic">
+        </a>
+      </div>
+    </div>
+
+    <section class="profile-section">
+      <div class="profile-container">
+        <div class="profile-top">
+          <img src="images/profile.jpg" alt="Profile Picture" class="profile-pic-large">
+          <h2 id="full-name">User Name</h2>
+        </div>
+
+        <form class="profile-form">
+          <label for="firstName">First Name</label>
+          <input type="text" id="firstName" name="firstName" placeholder="Jorge Jose">
+
+          <label for="lastName">Last Name</label>
+          <input type="text" id="lastName" name="lastName" placeholder="Abenojar">
+
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" placeholder="tara_shabu_shabuhay_ko_yieee@email.com">
+
+          <label for="phone">Phone Number</label>
+          <input type="text" id="phone" name="phone" placeholder="09123456789">
+
+          <label for="department">Department</label>
+          <select id="department" name="department">
+            <option value="">Select Department</option>
+            <option value="IT">IT Department</option>
+            <option value="HR">HR Department</option>
+            <option value="Finance">Finance Department</option>
+            <option value="Research">Research Department</option>
+          </select>
+
+          <button type="submit" class="submit-btn">Update</button>
+        </form>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="js/script.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Upload Documents</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="container">
+  <nav class="sidebar">
+    <h1>DTS</h1>
+    <ul>
+      <li><a href="index.html">Dashboard</a></li>
+      <li><a href="upload.html" class="active">Upload Documents</a></li>
+      <li><a href="my-documents.html">My Documents</a></li>
+    </ul>
+  </nav>
+
+  <main class="main-content">
+    <div class="top-bar">
+      <div class="top-left">
+        <h1>Upload Documents</h1>
+      </div>
+      <div class="top-right">
+        <div class="nav-link dropdown">🔔 Notifications
+          <div class="notifications-dropdown" id="notif-dropdown">
+            <ul id="notif-list"></ul>
+          </div>
+        </div>
+        <a href="profile.html" class="user-info">
+          <span>Welcome, User</span>
+          <img src="images/profile.jpg" alt="Profile" class="profile-pic">
+        </a>
+      </div>
+    </div>
+
+    <section class="upload-section">
+      <form id="uploadForm" class="upload-form" action="#" method="POST" enctype="multipart/form-data">
+        <label for="docTitle">Document Title</label>
+        <input type="text" id="docTitle" name="title" placeholder="Enter document title" required>
+
+        <label for="author">Author</label>
+        <input type="text" id="author" name="author" placeholder="Enter author name" required>
+
+        <label for="department">Department</label>
+        <select id="department" name="originating_department" required>
+          <option value="">Select Department</option>
+          <option value="IT">IT Department</option>
+          <option value="HR">HR Department</option>
+          <option value="Finance">Finance Department</option>
+          <option value="Research">Research Department</option>
+        </select>
+
+        <label for="category">Category</label>
+        <select id="category" name="category" required>
+          <option value="">Select Category</option>
+          <option value="thesis">Thesis</option>
+          <option value="research">Research Paper</option>
+          <option value="report">Report</option>
+          <option value="application">Application</option>
+        </select>
+
+        <label for="tags">Tags (comma separated)</label>
+        <input type="text" id="tags" name="tags" placeholder="Tag1, Tag2, Tag3">
+
+        <div class="upload-boxes">
+          <div class="upload-box">
+            <label for="fileUpload">Upload Document File</label>
+            <input type="file" id="fileUpload" name="file_path" required>
+          </div>
+          <div class="upload-box">
+            <label for="idUpload">Upload ID Picture (Used for tracking document)</label>
+            <input type="file" id="idUpload" name="qr_code" accept="image/*">
+          </div>
+        </div>
+
+        <button type="submit" class="submit-btn">Submit</button>
+      </form>
+    </section>
+  </main>
+</div>
+<script src="js/script.js"></script>
+</body>
+</html>

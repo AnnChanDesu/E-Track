@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="container">
+  <nav class="sidebar">
+    <h1>DTS</h1>
+    <ul>
+      <li><a href="index.html" class="active">Dashboard</a></li>
+      <li><a href="upload.html">Upload Documents</a></li>
+      <li><a href="my-documents.html">My Documents</a></li>
+    </ul>
+  </nav>
+
+  <main class="main-content">
+    <div class="top-bar">
+      <div class="top-left">
+        <h1>Dashboard</h1>
+      </div>
+      <div class="top-right">
+        <div class="nav-link dropdown" id="notif-button">🔔 Notifications
+          <div class="notifications-dropdown" id="notif-dropdown">
+            <ul id="notif-list"></ul>
+          </div>
+        </div>
+        <a href="profile.html" class="user-info">
+          <span>Welcome, User</span>
+          <img src="images/profile.jpg" alt="Profile" class="profile-pic">
+        </a>
+      </div>
+    </div>
+
+    <section class="search-container">
+      <input type="text" id="dashboard-search" placeholder="Search documents...">
+    </section>
+
+    <section class="dashboard-boxes">
+      <div class="box" id="pending-orders">
+        <h2>Documents Pending</h2>
+        <p class="status-number" id="pending-count">5</p>
+      </div>
+      <div class="box" id="documents-released">
+        <h2>Documents Released</h2>
+        <p class="status-number" id="released-count">12</p>
+      </div>
+      <div class="box" id="total-documents">
+        <h2>Total Documents</h2>
+        <p class="status-number" id="total-count">50</p>
+      </div>
+    </section>
+  </main>
+</div>
+<script src="js/script.js"></script>
+</body>
+</html>
